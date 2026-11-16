@@ -37,11 +37,13 @@
 
 - 后续[原生输入与启动可操作专项](../../verification/20261116-native-input.md)补齐真实 IME 组合提交，以及正式版三次原生快捷键响应上界平均 486.6 ms／最大 526.6 ms，本机缓存启动可操作目标通过。
 
+- 后续[Linux 服务器专项](../../verification/20261116-linux-openssh.md)通过官方 Alpine 镜像及便携 QEMU snapshot，补齐 OpenSSH 10.2p1、Unix chmod／stat、中文 SFTP 与真实 BusyBox top 显示及退出恢复；测试环境已清理。
+
 ## Fog
 
 - P6 原生集成专项补齐跨服务器上传／关闭来源终端、Windows 剪贴板中文空格往返及系统主题实时切换，见[验证记录](../../verification/20261116-native-integration.md)；系统拖放因工具不支持跨源窗口边界仍待实际验收；重启冷启动与全新无工具链机器也待补。
 
-- 后续已补齐[真实 Windows OpenSSH／Vim](../../verification/20261116-openssh.md) 的指纹核对、私钥认证、SFTP 操作与中文编辑保存／退出恢复；Linux OpenSSH／Unix 权限／top 和系统 Agent 服务仍需对应环境证据。
+- 后续已补齐[真实 Windows OpenSSH／Vim](../../verification/20261116-openssh.md) 的指纹核对、私钥认证、SFTP 操作与中文编辑保存／退出恢复；后续 Linux OpenSSH／Unix 权限／BusyBox top 已通过独立 Alpine 虚拟机补齐；系统 Agent 服务仍需对应环境证据。
 
 - P6 已完成正式十分钟负载、资源收敛、ZIP 及隔离升级验证，结果见[性能报告](../../performance/20261116-product.md)。单终端／八终端内存目标通过；首版整体验收仍进行中，缺失证据见[逐项验收](acceptance.md)和[09 任务进展](issues/09-performance-release.md)。
 

@@ -1,0 +1,20 @@
+{
+  "privateKeyAuthentication": true,
+  "topScreenshot": "linux-top.png",
+  "hostFingerprint": "SHA256:qaZByGma6gtPF1K/XimXv7KYNcXlsW++gvBTHbEFus4",
+  "unixModeAfter": "600",
+  "sftpMkdirCheckedViaShell": true,
+  "ptyShell": true,
+  "shellRecoveredAfterTop": true,
+  "unixModeBefore": "640",
+  "sftpUnicodeDirectory": true,
+  "unixModeCheckedViaStat": true,
+  "passed": true,
+  "alpineVersion": "3.23.4",
+  "kernel": "6.18.22-0-virt",
+  "openSSHVersion": "10.2p1",
+  "busyBoxVersion": "1.37.0",
+  "topVisuallyReviewed": true,
+  "fixtureStopped": true,
+  "hostSystemAgentServiceChanged": false
+}
