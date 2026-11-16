@@ -1,6 +1,6 @@
 # SSHub 0.1.0 候选版 · Windows x64
 
-当前仍在首版验收，系统拖放、输入法及真实服务器兼容性等覆盖情况以仓库验收记录为准。
+当前仍在首版验收。中文输入法、真实 Windows／Linux OpenSSH 和缓存启动响应已实测；系统拖放、系统 Agent 服务、重启冷启动及干净 Windows 环境仍待补证据，具体以仓库验收记录为准。
 
 解压整个文件夹，双击 `SSHub.exe` 即可运行，无需安装 Go、Node 或 WebView2。`ghostty-vt.dll` 必须和 EXE 放在同一目录。当前实测 Windows 11 x64；其他平台尚未验收。
 
@@ -21,3 +21,13 @@
 首版不提供断点续传、符号链接复制、持久化任务队列、多层跳板、远程编辑器、自动更新或云同步。路径式 SFTP 操作不能保证抵抗服务器上其他进程同时替换路径；不支持权限设置／原子覆盖扩展的服务器会明确失败，不先删除原文件绕过。
 
 第三方许可保存在 `licenses/`，组件版本和 SHA-256 在 `build-info.json`，文件校验在 `SHA256SUMS.txt`。尚未数字签名。性能及兼容性验收以源码仓库中的首版报告为准，不能将单次通过理解为所有服务器和所有终端程序均已兼容。
+
+可选运行检查：在解压目录打开 PowerShell，执行 `powershell.exe -NoProfile -File .\verify-portable-runtime.ps1`。使用 Windows 自带 PowerShell 5.1 即可，不需要 Go、Node、Python 或 PowerShell 7。脚本先核对包内哈希，再用临时 APPDATA、仅含 Windows 的子进程 PATH 启动并正常关闭应用，复制程序到另一目录后复验连接／主题／信任／布局保留；不会操作现有用户配置。结果保存在输出提示的临时目录。请在应用空闲时运行，不需要手动连接服务器。
+
+该检查记录实际 Windows 版本和当前 PATH 可发现的开发工具；在开发机执行不等于干净虚拟机验收，也不替代真实 SSH、终端动态库加载、拖放或冷启动检查。若在全新 Windows 测试机运行，请同时记录系统镜像来源与环境；不要仅以 PATH 隔离声称没有安装开发工具。
+
+如果本机策略禁止运行 `.ps1` 文件，可在解压目录直接让 PowerShell 执行以下代码，不更改系统执行策略：
+
+```powershell
+& ([scriptblock]::Create([IO.File]::ReadAllText((Join-Path (Get-Location) 'verify-portable-runtime.ps1')))) -ProgramDirectory (Get-Location).Path
+```

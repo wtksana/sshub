@@ -39,6 +39,8 @@
 
 - 后续[Linux 服务器专项](../../verification/20261116-linux-openssh.md)通过官方 Alpine 镜像及便携 QEMU snapshot，补齐 OpenSSH 10.2p1、Unix chmod／stat、中文 SFTP 与真实 BusyBox top 显示及退出恢复；测试环境已清理。
 
+- [便携复测脚本](../../verification/20261116-portable-runtime.md)随新候选 ZIP 分发，Windows PowerShell 5.1 实测通过；[剩余验收步骤](../../verification/remaining-acceptance.md)明确拖入手势、系统 Agent、重启冷启动及干净 Windows 所需环境，不将脚本准备视为验收通过。
+
 ## Fog
 
 - P6 原生集成专项补齐跨服务器上传／关闭来源终端、Windows 剪贴板中文空格往返及系统主题实时切换，见[验证记录](../../verification/20261116-native-integration.md)；系统拖放因工具不支持跨源窗口边界仍待实际验收；重启冷启动与全新无工具链机器也待补。

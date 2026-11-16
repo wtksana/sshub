@@ -44,3 +44,5 @@
 [原生输入与启动可操作专项](../../verification/20261116-native-input.md)补齐真实拼音键／候选／提交中文，以及同一正式 EXE 的三轮启动到快捷键响应截图上界（526.6／467.5／465.7 ms），均小于一秒。系统拖放因工具拒绝跨源窗口边界未完成，保持待验收。本次只增加测量脚本与证据，未修改产品或重复全仓检查；全部测试窗口和进程已退出。
 
 [Linux OpenSSH 专项](../../verification/20261116-linux-openssh.md)在独立 Alpine 3.23.4 snapshot 中通过：真实 OpenSSH 10.2p1 私钥／指纹、PTY、SFTP 中文文件／目录、Unix 640→600 权限及远端 stat 核对、BusyBox top 实际显示和退出后 shell 恢复。启动／停止脚本从原镜像复现通过；无宿主服务或 WSL 配置变更，虚拟机已退出。
+
+[便携运行复测入口](../../verification/20261116-portable-runtime.md)已随新候选包提供，Windows 自带 PowerShell 5.1 完整检查通过，DLL 篡改在启动前被拒绝；EXE 哈希不变。新增[剩余验收操作](../../verification/remaining-acceptance.md)及中文文件／文件夹拖放的内容核对器；内容检查器通过不视为原生拖放通过。干净 Windows、重启冷启动和真实系统 Agent 服务仍需对应环境，P6 不标完成。

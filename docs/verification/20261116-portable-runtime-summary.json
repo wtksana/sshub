@@ -1,0 +1,44 @@
+{
+  "at": "2026-11-16T22:26:04.9199024+08:00",
+  "passed": true,
+  "runs": [
+    {
+      "exe_sha256": "F3AB848F26FDC913DAC6E4B3B35770FA41A4E266CEBE66E0966F6DC43708D0D0",
+      "clean_exit": true,
+      "workspace_preserved": true,
+      "trust_preserved": true,
+      "label": "original",
+      "configuration_preserved": true,
+      "connected": 0,
+      "child_path": "C:\\Windows\\System32;C:\\Windows"
+    },
+    {
+      "exe_sha256": "F3AB848F26FDC913DAC6E4B3B35770FA41A4E266CEBE66E0966F6DC43708D0D0",
+      "clean_exit": true,
+      "workspace_preserved": true,
+      "trust_preserved": true,
+      "label": "replacement",
+      "configuration_preserved": true,
+      "connected": 0,
+      "child_path": "C:\\Windows\\System32;C:\\Windows"
+    }
+  ],
+  "powershell": "5.1.26100.9818",
+  "checked_file_count": 31,
+  "os": {
+    "caption": "Microsoft Windows 11 家庭版 中文版",
+    "architecture": "64 位",
+    "last_boot": "2026-11-11T04:42:27.5003160Z",
+    "version": "10.0.26300"
+  },
+  "discoverable_development_tools": [
+    "go.exe",
+    "node.exe",
+    "node.exe",
+    "node.exe",
+    "python.exe",
+    "python.exe",
+    "python3.exe"
+  ],
+  "limitation": "Records this Windows environment and discoverable tools; PATH isolation alone does not establish a clean VM. Ready/show is not input responsiveness. This script does not test SSH, terminal DLL loading, system drag-and-drop, or reboot cold startup."
+}
