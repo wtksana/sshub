@@ -22,6 +22,7 @@ func (a *app) view(c *ui.Context) {
 			ui.Text(c, "SSHub").FontSize(18).Bold()
 			ui.Text(c, "服务器工作区").TextColor(t.TextMuted)
 			ui.Spacer(c)
+			ui.Button(c.Key("manage-hosts"), "已信任主机").OnClick(a.showHosts)
 			ui.Button(c.Key("toggle-connections"), "连接库").OnClick(func() { a.hideLeft = !a.hideLeft })
 			ui.Button(c.Key("toggle-files"), "文件面板").OnClick(func() { a.hideRight = !a.hideRight })
 		})
@@ -42,6 +43,12 @@ func (a *app) view(c *ui.Context) {
 				ui.Button(c.Key("dismiss-error"), "关闭提示").OnClick(func() { a.actionError = "" })
 			})
 		}
+		if a.notice != "" {
+			ui.Row(c).Padding(8, 14).Gap(10).Children(func() {
+				ui.Text(c, a.notice).Wrap().Grow(1)
+				ui.Button(c.Key("dismiss-notice"), "关闭提示").OnClick(func() { a.notice = "" })
+			})
+		}
 		main := func() {
 			if a.hideRight {
 				a.center(c)
@@ -56,6 +63,8 @@ func (a *app) view(c *ui.Context) {
 		}
 	})
 	a.editorView(c)
+	a.sessionDialogs(c)
+	a.promptView(c)
 	if ui.AlertDialog(c.Key("delete-confirm"), &a.deleting, "删除连接配置？", "将删除“"+a.deleteName+"”的已保存配置，已打开的工作区不受影响。", "取消", "删除配置") == 1 {
 		if err := a.store.Delete(a.deleteID); err != nil {
 			a.actionError = err.Error()

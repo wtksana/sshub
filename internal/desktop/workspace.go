@@ -3,17 +3,12 @@ package desktop
 import (
 	"fmt"
 	"net"
-	"slices"
 	"strconv"
 
+	"github.com/egoist/mygo/plugins/terminal"
 	"github.com/egoist/mygo/ui"
 	"sshub/internal/library"
 )
-
-type workspace struct {
-	key     int
-	profile library.Profile
-}
 
 func (a *app) center(c *ui.Context) {
 	t := c.Theme()
@@ -31,20 +26,20 @@ func (a *app) center(c *ui.Context) {
 						}
 						b.OnClick(func() { a.activeTab = tab.key })
 						ui.Button(c.Key(fmt.Sprintf("close-tab-%d", tab.key)), "×").Label("关闭工作区 " + tab.profile.Name).OnClick(func() {
-							a.tabs = slices.DeleteFunc(a.tabs, func(v workspace) bool { return v.key == tab.key })
-							if a.activeTab == tab.key {
-								a.activeTab = 0
-								if len(a.tabs) > 0 {
-									a.activeTab = a.tabs[len(a.tabs)-1].key
-								}
-							}
+							a.requestClose(tab)
 						})
 					})
 				}
 			})
 		})
 		ui.Divider(c)
-		ui.Scroll(c.Key("profile-details")).Grow(1).FillWidth().Padding(24).Gap(14).Children(func() {
+		details := ui.Scroll(c.Key("profile-details")).FillWidth().Padding(18).Gap(10)
+		if a.activeWorkspace() != nil {
+			details.MaxHeight(220)
+		} else {
+			details.Grow(1)
+		}
+		details.Children(func() {
 			if p, ok := a.selectedProfile(); ok {
 				ui.Text(c, p.Name).FontSize(21).Bold().Wrap()
 				ui.Text(c, p.Username+"@"+net.JoinHostPort(p.Host, strconv.Itoa(p.Port))).TextColor(t.TextMuted).Wrap()
@@ -71,14 +66,32 @@ func (a *app) center(c *ui.Context) {
 				ui.Text(c, "在连接库中选择连接，或添加第一台服务器。").TextColor(t.TextMuted).Wrap()
 				ui.PrimaryButton(c.Key("welcome-new-profile"), "新建连接").OnClick(func() { a.beginEdit(library.Profile{}) })
 			}
-			ui.Divider(c)
-			for _, tab := range a.tabs {
-				if tab.key == a.activeTab {
-					ui.Text(c, tab.profile.Name+" · 待连接").Bold().Wrap()
-					ui.Text(c, "尚未建立 SSH 连接，未执行远程命令。").TextColor(t.TextMuted).Wrap()
-					ui.Button(c.Key("connect-pending"), "连接").Disabled(true).Tooltip("当前版本提供连接管理，SSH 连接功能尚未接入")
-				}
-			}
 		})
+		if tab := a.activeWorkspace(); tab != nil {
+			ui.Divider(c)
+			ui.Row(c).Padding(8, 12).Gap(8).Wrap().AlignItems(ui.Center).Children(func() {
+				ui.Text(c, tab.profile.Name+" · "+tab.status).Bold().Wrap()
+				ui.Spacer(c)
+				switch tab.status {
+				case "连接中":
+					ui.Button(c.Key("cancel-connect"), "取消连接").OnClick(func() { a.disconnect(tab); tab.status = "已取消" })
+				case "已连接":
+					ui.Button(c.Key("disconnect-session"), "断开").OnClick(func() { a.disconnect(tab) })
+				default:
+					ui.PrimaryButton(c.Key("connect-pending"), "连接").OnClick(func() { a.connect(tab) })
+				}
+				ui.Button(c.Key("forget-credentials"), "忘记凭据").Disabled(tab.status == "连接中").OnClick(func() { a.forgetCredentials(tab.profile) })
+			})
+			if tab.err != "" {
+				ui.Text(c, tab.err).Padding(10).TextColor(t.Danger).Wrap()
+			}
+			if tab.term != nil {
+				terminal.View(c.Key(tab.key), tab.term).Grow(1).FillWidth()
+			} else {
+				ui.Column(c).Grow(1).FillWidth().Padding(20).Children(func() {
+					ui.Text(c, "连接后在此显示终端；密码和主机指纹会单独确认。").TextColor(t.TextMuted).Wrap()
+				})
+			}
+		}
 	})
 }

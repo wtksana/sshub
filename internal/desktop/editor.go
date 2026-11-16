@@ -10,10 +10,12 @@ import (
 )
 
 type editor struct {
-	profile library.Profile
-	port    string
-	auth    string
-	err     string
+	profile   library.Profile
+	port      string
+	auth      string
+	err       string
+	advanced  bool
+	jumpLabel string
 }
 
 func (a *app) beginEdit(p library.Profile) {
@@ -24,6 +26,13 @@ func (a *app) beginEdit(p library.Profile) {
 		}
 	}
 	a.draft = editor{profile: p, port: strconv.Itoa(p.Port), auth: authLabel(p.Auth)}
+	a.draft.advanced = p.JumpID != ""
+	a.draft.jumpLabel = "不使用跳板机"
+	for _, v := range a.profiles {
+		if v.ID == p.JumpID {
+			a.draft.jumpLabel = "经由：" + v.Name
+		}
+	}
 	a.editGeneration++
 	a.editing = true
 }
@@ -50,6 +59,18 @@ func (a *app) saveDraft() {
 		return
 	}
 	p.Port = port
+	p.JumpID = ""
+	if a.draft.jumpLabel != "不使用跳板机" {
+		for _, v := range a.profiles {
+			if a.draft.jumpLabel == "经由："+v.Name {
+				p.JumpID = v.ID
+			}
+		}
+		if p.JumpID == "" {
+			a.draft.err = "跳板机配置已不存在，请重新选择"
+			return
+		}
+	}
 	switch a.draft.auth {
 	case "密码":
 		p.Auth, p.IdentityPath = "password", ""
@@ -95,6 +116,16 @@ func (a *app) editorView(c *ui.Context) {
 				field("profile-identity", "私钥路径", `C:\Users\you\.ssh\id_ed25519`, &a.draft.profile.IdentityPath)
 			}
 			ui.Checkbox(c.Key("profile-favorite"), &a.draft.profile.Favorite, "加入收藏")
+			ui.Checkbox(c.Key("profile-advanced"), &a.draft.advanced, "高级选项")
+			if a.draft.advanced {
+				choices := []string{"不使用跳板机"}
+				for _, v := range a.profiles {
+					if v.ID != a.draft.profile.ID && v.JumpID == "" {
+						choices = append(choices, "经由："+v.Name)
+					}
+				}
+				ui.Field(c, "单层跳板机", func() { ui.Select(c.Key("profile-jump"), &a.draft.jumpLabel, choices).FillWidth() })
+			}
 		})
 		if a.draft.err != "" {
 			ui.Text(c, a.draft.err).TextColor(t.Danger).Wrap()

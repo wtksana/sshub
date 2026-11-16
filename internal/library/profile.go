@@ -20,6 +20,7 @@ type Profile struct {
 	Group        string    `json:"group,omitempty"`
 	Favorite     bool      `json:"favorite"`
 	LastUsed     time.Time `json:"last_used,omitempty"`
+	JumpID       string    `json:"jump_id,omitempty"`
 }
 
 func Validate(p Profile) error {

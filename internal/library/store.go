@@ -115,6 +115,15 @@ func validateDocument(doc Document) error {
 			return err
 		}
 	}
+	for _, p := range doc.Profiles {
+		if p.JumpID == "" {
+			continue
+		}
+		index := slices.IndexFunc(doc.Profiles, func(v Profile) bool { return v.ID == p.JumpID })
+		if index < 0 || p.JumpID == p.ID || doc.Profiles[index].JumpID != "" {
+			return errors.New("跳板机配置不存在、自引用或超过单层")
+		}
+	}
 	return nil
 }
 
@@ -152,6 +161,9 @@ func (s *Store) Upsert(p Profile) (Profile, error) {
 		p.LastUsed = next.Profiles[i].LastUsed
 		next.Profiles[i] = p
 	}
+	if err := validateDocument(next); err != nil {
+		return Profile{}, err
+	}
 	return p, s.save(next)
 }
 
@@ -161,6 +173,9 @@ func (s *Store) Delete(id string) error {
 	i := slices.IndexFunc(s.doc.Profiles, func(v Profile) bool { return v.ID == id })
 	if i < 0 {
 		return errors.New("连接配置已不存在")
+	}
+	if slices.ContainsFunc(s.doc.Profiles, func(v Profile) bool { return v.JumpID == id }) {
+		return errors.New("该连接正在被其他连接用作跳板机，请先修改引用它的连接配置")
 	}
 	next := Document{Version: 1, Profiles: slices.Delete(slices.Clone(s.doc.Profiles), i, i+1)}
 	return s.save(next)

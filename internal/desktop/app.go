@@ -2,7 +2,10 @@ package desktop
 
 import (
 	"slices"
+	"sync/atomic"
 
+	"github.com/egoist/mygo"
+	"sshub/internal/connection"
 	"sshub/internal/library"
 )
 
@@ -19,12 +22,26 @@ type app struct {
 	editGeneration           int
 	draft                    editor
 	deleteID, deleteName     string
-	tabs                     []workspace
+	tabs                     []*workspace
 	nextTab, activeTab       int
+	win                      *mygo.Window
+	closing                  atomic.Bool
+	trust                    *connection.TrustStore
+	prompts                  chan *connectionPrompt
+	prompt                   *connectionPrompt
+	promptGeneration         int
+	closeTabID               int
+	confirmCloseTab          bool
+	confirmQuit, allowQuit   bool
+	manageHosts              bool
+	hosts                    []connection.HostIdentity
+	forgetHost               string
+	confirmForgetHost        bool
+	notice                   string
 }
 
 func newApp(dir string) *app {
-	a := &app{dir: dir, leftSize: 260, contentPercent: 66, group: "全部分组"}
+	a := &app{dir: dir, leftSize: 260, contentPercent: 66, group: "全部分组", prompts: make(chan *connectionPrompt, 16)}
 	a.load()
 	return a
 }
@@ -47,10 +64,18 @@ func (a *app) load() {
 		return
 	}
 	a.store, a.loadError = s, ""
+	a.trust = connection.NewTrustStore(a.dir)
 	a.refresh()
 }
 
 func (a *app) close() {
+	a.closing.Store(true)
+	for _, tab := range a.tabs {
+		a.release(tab)
+		if tab.term != nil {
+			tab.term.Close()
+		}
+	}
 	if a.store != nil {
 		a.store.Close()
 	}
@@ -73,7 +98,14 @@ func (a *app) openWorkspace(p library.Profile) {
 	}
 	a.refresh()
 	a.nextTab++
-	a.tabs = append(a.tabs, workspace{key: a.nextTab, profile: p})
+	tab := &workspace{key: a.nextTab, profile: p, status: "待连接"}
+	if p.JumpID != "" {
+		if i := slices.IndexFunc(a.profiles, func(v library.Profile) bool { return v.ID == p.JumpID }); i >= 0 {
+			jump := a.profiles[i]
+			tab.jump = &jump
+		}
+	}
+	a.tabs = append(a.tabs, tab)
 	a.activeTab, a.actionError = a.nextTab, ""
 }
 

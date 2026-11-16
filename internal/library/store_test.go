@@ -201,3 +201,43 @@ func TestClosedStoreCannotSave(t *testing.T) {
 		t.Fatal("closed store accepted a write")
 	}
 }
+
+func TestJumpReferencesSurviveRestartAndRejectInvalidChanges(t *testing.T) {
+	dir := t.TempDir()
+	s := openTestStore(t, dir)
+	jump, err := s.Upsert(profile("jump"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	target := profile("target")
+	target.JumpID = jump.ID
+	target, err = s.Upsert(target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Delete(jump.ID); err == nil {
+		t.Fatal("referenced jump deleted")
+	}
+	for _, id := range []string{"missing", target.ID} {
+		changed := target
+		changed.JumpID = id
+		if _, err := s.Upsert(changed); err == nil {
+			t.Fatal("invalid jump accepted")
+		}
+	}
+	jump.JumpID = target.ID
+	if _, err := s.Upsert(jump); err == nil {
+		t.Fatal("nested jump accepted")
+	}
+	s.Close()
+	s = openTestStore(t, dir)
+	if s.Profiles()[1].JumpID != jump.ID {
+		t.Fatal("jump reference lost")
+	}
+	if err := s.Delete(target.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Delete(jump.ID); err != nil {
+		t.Fatal(err)
+	}
+}

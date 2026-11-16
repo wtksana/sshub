@@ -86,7 +86,7 @@ try {
     Invoke-UI press key=open-workspace --settle | Out-Null
     Assert-Text '香港生产服务器 · 待连接'
     $snapshot = Read-UI
-    if ($snapshot -notmatch 'key=connect-pending disabled') { throw 'P1 must not offer an unimplemented connection' }
+    if ($snapshot -notmatch 'key=connect-pending' -or $snapshot -match 'key=connect-pending disabled') { throw 'Connection action missing' }
     $snapshot | Set-Content -Encoding utf8 (Join-Path $directory 'workspace.txt')
     Invoke-UI screenshot (Join-Path $directory 'workspace.png') | Out-Null
 

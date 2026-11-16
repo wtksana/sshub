@@ -1,6 +1,6 @@
 # 项目结构
 
-当前采用一个 Go module、一个桌面入口及三个内部包。根目录保留 `main.go` 与 `mygo.json`，符合现有 MyGo 构建方式；当前只有一个可执行应用，入口无需额外迁移到 `cmd/`。
+当前采用一个 Go module、一个桌面入口及按职责组织的内部包。根目录保留 `main.go` 与 `mygo.json`，符合现有 MyGo 构建方式；当前只有一个正式应用，入口无需额外迁移到 `cmd/`。
 
 ## 模块职责
 
@@ -12,21 +12,28 @@
 | `internal/desktop/view.go` | 主布局、主题与全局反馈 |
 | `internal/desktop/sidebar.go` | 连接库、搜索和筛选 |
 | `internal/desktop/workspace.go` | 工作区标签与连接详情 |
+| `internal/desktop/session.go` | 异步连接、终端生命周期、取消及断开 |
+| `internal/desktop/prompts.go` | 串行主机确认与凭据输入提示 |
+| `internal/desktop/credentials.go` | 系统凭据读写与连接身份隔离 |
+| `internal/desktop/session_dialogs.go` | 关闭确认及主机信任管理 |
 | `internal/desktop/editor.go` | 连接编辑表单、校验反馈及保存交互 |
 | `internal/desktop/files.go` | 右侧文件与传输区域；当前尚未接入 SFTP |
 | `internal/library/profile.go` | 连接配置模型与字段校验 |
 | `internal/library/filter.go` | 搜索、分组、收藏及最近使用筛选 |
 | `internal/library/store.go` | 配置加载、CRUD、可靠写入和并发实例保护 |
 | `internal/library/lock_*.go` | 按系统选择文件锁实现 |
-| `internal/connection/` | SSH / SFTP 协议基础与回归测试，待 P2 扩展并接入界面 |
+| `internal/connection/` | SSH 认证、取消、单层跳板、主机信任与终端通道；SFTP 底层能力及协议回归 |
+| `internal/testssh/` | 共享的回环 SSH 测试服务；`cmd/` 只在 `e2e` 构建中提供 UI 测试辅助进程 |
 
 拆文件用于集中每项职责，界面仍在同一包内；不为每个视觉区域创建额外包，也不增加只有转发作用的抽象层。
 
 ## 依赖与扩展
 
-当前正式入口依赖 `desktop`，`desktop` 使用 `library`；`library` 不依赖 UI，`connection` 不依赖 UI 或连接库。配置文件读写及文件锁只由连接库处理，界面不直接序列化配置。
+当前正式入口依赖 `desktop`，`desktop` 使用 `library` 与 `connection`；`library` 不依赖 UI，`connection` 不依赖 UI 或连接库。配置文件读写及文件锁只由连接库处理，界面不直接序列化配置。测试服务不进入正式应用的依赖链。
 
-P2 接入网络后，UI 负责触发操作与显示状态，协议模块处理认证、握手和远程通道。会话管理、凭据库和传输调度在各自功能开始时建立明确职责，不提前创建空包或通用 `utils` 包。
+P2 中 UI 负责操作、状态、终端实例与系统凭据集成；协议模块通过上下文和回调处理认证、握手、信任记录与远程通道。网络和凭据调用在后台执行，窗口更新统一派发到 UI 线程；每次连接有独立取消上下文与代次检查，过期结果不能覆盖新会话。工作区持有连接配置及跳板配置快照，编辑保存不改变已打开会话的目标。
+
+主机确认串行显示，避免并发会话覆盖提示。未知密钥仅在用户确认后可靠写入应用自己的 `known_hosts`；变化密钥拒绝连接。系统凭据按数据目录、配置及认证目标隔离，仅在明确勾选且连接成功后保存，失败不回退明文文件。传输调度在 P4 建立，不提前增加空包。
 
 ## 工具与资料
 
