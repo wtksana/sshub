@@ -39,11 +39,13 @@
 
 - 后续[Linux 服务器专项](../../verification/20261116-linux-openssh.md)通过官方 Alpine 镜像及便携 QEMU snapshot，补齐 OpenSSH 10.2p1、Unix chmod／stat、中文 SFTP 与真实 BusyBox top 显示及退出恢复；测试环境已清理。
 
-- [便携复测脚本](../../verification/20261116-portable-runtime.md)随新候选 ZIP 分发，Windows PowerShell 5.1 实测通过；[剩余验收步骤](../../verification/remaining-acceptance.md)明确拖入手势、系统 Agent、重启冷启动及干净 Windows 所需环境，不将脚本准备视为验收通过。
+- [便携复测脚本](../../verification/20261116-portable-runtime.md)随新候选 ZIP 分发，Windows PowerShell 5.1 实测通过；[剩余验收步骤](../../verification/remaining-acceptance.md)保留各项复测操作，当前只剩重启冷启动及干净 Windows 环境。
+
+- [资源管理器原生拖入](../../verification/20261116-native-drop.md)已由用户实际执行并确认完成：两个任务成功，中文文件、嵌套文件哈希一致，空目录保留；临时应用／服务器及本次文件夹窗口已清理。
 
 ## Fog
 
-- P6 原生集成专项补齐跨服务器上传／关闭来源终端、Windows 剪贴板中文空格往返及系统主题实时切换，见[验证记录](../../verification/20261116-native-integration.md)；系统拖放因工具不支持跨源窗口边界仍待实际验收；重启冷启动与全新无工具链机器也待补。
+- P6 原生集成专项补齐跨服务器上传／关闭来源终端、Windows 剪贴板中文空格往返及系统主题实时切换，见[验证记录](../../verification/20261116-native-integration.md)；系统拖放后由用户实际执行并补齐；重启冷启动与全新无工具链机器仍待补。
 
 - 后续已补齐[真实 Windows OpenSSH／Vim](../../verification/20261116-openssh.md) 的指纹核对、私钥认证、SFTP 操作与中文编辑保存／退出恢复；后续 Linux OpenSSH／Unix 权限／BusyBox top 已通过独立 Alpine 虚拟机补齐；系统 Agent 已在授权后通过实际服务补齐，见[专项](../../verification/20261116-system-agent.md)，临时密钥和服务状态已恢复。
 

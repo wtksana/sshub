@@ -1,0 +1,19 @@
+{
+  "empty_directory_verified": true,
+  "note": "File hashes prove delivery only. Record actual Explorer drag and product task results separately; do not treat this check as proof of native OLE input.",
+  "native_gesture_observed_by_script": false,
+  "contents_verified": true,
+  "files": [
+    {
+      "sha256": "5635E380728910A8A5CB8BE0565421BB12A1EC70796B9182E7C0F229FA866377",
+      "relative": "拖入 中文.txt"
+    },
+    {
+      "sha256": "135D5406398A3ED9B87DA42BB149E30B80B3F275DAC5606F8761C9E428CD8702",
+      "relative": "拖入 文件夹/子目录/空格 内容.txt"
+    }
+  ],
+  "user_confirmed_explorer_drag": true,
+  "queue_completed_count": 2,
+  "product_and_explorer_elevated": true
+}
