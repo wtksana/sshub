@@ -21,11 +21,7 @@ func (a *app) view(c *ui.Context) {
 	c.DisableAnimations()
 	c.SetMenuPresentation(ui.PopoverMenus)
 	ui.Column(c).Fill().Children(func() {
-		ui.Row(c).Height(34).Padding(0, 10).Gap(8).AlignItems(ui.Center).Children(func() {
-			ui.Text(c, "SSHub").FontSize(13).Bold()
-			ui.Spacer(c)
-			ui.Button(c.Key("app-menu"), "☰").Label("应用菜单").Tooltip("视图与主机信任").Padding(3, 7).Background(ui.Transparent).BorderWidth(0).Menu(a.appMenu)
-		})
+		a.titlebar(c)
 		ui.Divider(c)
 		if a.loadError != "" {
 			ui.Column(c).Padding(24).Gap(12).Children(func() {

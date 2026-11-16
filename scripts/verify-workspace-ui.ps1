@@ -1,4 +1,4 @@
-param([switch]$SkipBuild)
+param([switch]$SkipBuild, [string]$BuildDirectory = 'build')
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 . "$PSScriptRoot/ui-helpers.ps1"
@@ -7,7 +7,7 @@ $appProcess = $null
 $servers = [Collections.Generic.List[Diagnostics.Process]]::new()
 $previousSession = $env:MYGO_AUTOMATION_SESSION
 try {
-    if (!$SkipBuild) { & "$PSScriptRoot/build.ps1" -DebugBuild }
+    if (!$SkipBuild) { & "$PSScriptRoot/build.ps1" -DebugBuild -OutputDirectory $BuildDirectory }
     go build -o build/tools/mygo-automation.exe github.com/egoist/mygo/plugins/automation/cmd/mygo-automation
     if ($LASTEXITCODE -ne 0) { throw 'Automation build failed' }
     go build -tags e2e -o build/tools/ssh-fixture.exe ./internal/testssh/cmd
@@ -44,7 +44,7 @@ try {
     }
     function Start-App {
         $start = [Diagnostics.ProcessStartInfo]::new()
-        $start.FileName = Join-Path $root 'build/windows-amd64/SSHub.exe'
+        $start.FileName = Join-Path $root "$BuildDirectory/windows-amd64/SSHub.exe"
         $start.UseShellExecute = $false; $start.CreateNoWindow = $true
         $start.Environment['MYGO_AUTOMATION'] = $socket
         $start.ArgumentList.Add('-data-dir'); $start.ArgumentList.Add($dataDir)

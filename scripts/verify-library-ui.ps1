@@ -1,4 +1,4 @@
-param([switch]$SkipBuild)
+param([switch]$SkipBuild, [string]$BuildDirectory = 'build')
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 . "$PSScriptRoot/ui-helpers.ps1"
@@ -6,11 +6,11 @@ Push-Location $root
 $process = $null
 $previousSession = $env:MYGO_AUTOMATION_SESSION
 try {
-    if (!$SkipBuild) { & "$PSScriptRoot/build.ps1" -DebugBuild }
+    if (!$SkipBuild) { & "$PSScriptRoot/build.ps1" -DebugBuild -OutputDirectory $BuildDirectory }
     go build -o build/tools/mygo-automation.exe github.com/egoist/mygo/plugins/automation/cmd/mygo-automation
     if ($LASTEXITCODE -ne 0) { throw 'Automation CLI build failed' }
     $cli = Join-Path $root 'build/tools/mygo-automation.exe'
-    $exe = Join-Path $root 'build/windows-amd64/SSHub.exe'
+    $exe = Join-Path $root "$BuildDirectory/windows-amd64/SSHub.exe"
     $directory = Join-Path $root ('artifacts/library-ui/' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
     $dataDir = Join-Path $directory 'data'
     New-Item -ItemType Directory -Force $dataDir | Out-Null

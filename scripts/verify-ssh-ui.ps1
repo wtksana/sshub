@@ -1,4 +1,4 @@
-param([switch]$SkipBuild)
+param([switch]$SkipBuild, [string]$BuildDirectory = 'build')
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 . "$PSScriptRoot/ui-helpers.ps1"
@@ -7,7 +7,7 @@ $appProcess = $null
 $serverProcess = $null
 $previousSession = $env:MYGO_AUTOMATION_SESSION
 try {
-    if (!$SkipBuild) { & "$PSScriptRoot/build.ps1" -DebugBuild }
+    if (!$SkipBuild) { & "$PSScriptRoot/build.ps1" -DebugBuild -OutputDirectory $BuildDirectory }
     go build -o build/tools/mygo-automation.exe github.com/egoist/mygo/plugins/automation/cmd/mygo-automation
     if ($LASTEXITCODE -ne 0) { throw 'Automation build failed' }
     go build -tags e2e -o build/tools/ssh-fixture.exe ./internal/testssh/cmd
@@ -46,7 +46,7 @@ try {
     }
     function Start-App {
         $start = [Diagnostics.ProcessStartInfo]::new()
-        $start.FileName = Join-Path $root 'build/windows-amd64/SSHub.exe'
+        $start.FileName = Join-Path $root "$BuildDirectory/windows-amd64/SSHub.exe"
         $start.UseShellExecute = $false; $start.CreateNoWindow = $true
         $start.Environment['MYGO_AUTOMATION'] = $socket
         $start.ArgumentList.Add('-data-dir'); $start.ArgumentList.Add($dataDir)
@@ -129,7 +129,7 @@ try {
     Open-Workspace
     Wait-Text '本地安全 SSH · 已连接'
     if ((Snapshot).Contains('connection-secret')) { throw 'Remembered credential prompted again' }
-    $appProcess.CloseMainWindow() | Out-Null
+    UI press key=window-close --settle | Out-Null
     Wait-Text '退出 SSHub？'
     UI key Escape --settle | Out-Null
     Wait-Text '本地安全 SSH · 已连接'
@@ -168,7 +168,7 @@ try {
     UI press key=accept-connection-prompt --settle | Out-Null
     Wait-Text '加密私钥 SSH · 已连接'
     UI screenshot (Join-Path $directory 'jump-encrypted.png') | Out-Null
-    $appProcess.CloseMainWindow() | Out-Null
+    UI press key=window-close --settle | Out-Null
     Wait-Text '退出 SSHub？'
     $quitRef = [regex]::Match((Snapshot), '(?m)^\s*(@e\d+) \[button\] "断开并退出"').Groups[1].Value
     if (!$quitRef) { throw 'Exit confirmation missing' }
