@@ -1,6 +1,7 @@
 param([switch]$SkipBuild)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
+. "$PSScriptRoot/ui-helpers.ps1"
 Push-Location $root
 $process = $null
 $previousSession = $env:MYGO_AUTOMATION_SESSION
@@ -17,11 +18,7 @@ try {
     if ($socket.Length -gt 100) { throw 'Automation socket path is too long' }
     $env:MYGO_AUTOMATION_SESSION = 'sshub-library-' + [guid]::NewGuid().ToString('N')
 
-    function Invoke-UI {
-        $output = & $cli @args
-        if ($LASTEXITCODE -ne 0) { throw "UI command failed: $args" }
-        return $output
-    }
+    function Invoke-UI { return Invoke-ProductUI @args }
     function Read-UI { return (Invoke-UI snapshot --full) -join "`n" }
     function Assert-Text([string]$text) {
         if (!(Read-UI).Contains($text)) { throw "Expected UI text: $text" }
@@ -30,6 +27,7 @@ try {
         if ((Read-UI).Contains($text)) { throw "Unexpected UI text: $text" }
     }
     function Choose-Option([string]$key, [string]$label) {
+        if ($key -eq 'group-filter') { Select-UIGroup $label; return }
         Invoke-UI press "key=$key" --settle | Out-Null
         $snapshot = Read-UI
         $pattern = '(?m)^\s*(@e\d+) \[listItem\] "' + [regex]::Escape($label) + '"'
@@ -80,13 +78,16 @@ try {
     Choose-Option 'profile-auth' '密码'
     Invoke-UI press key=profile-favorite | Out-Null
     Invoke-UI press key=save-profile --settle | Out-Null
-    Assert-Text '认证：密码'
+    Assert-Absent 'key=edit-profile'
     Assert-Text 'deploy@192.0.2.10:2222'
-    Assert-Text '取消收藏'
+    Open-ProfileMenu; Assert-Text '取消收藏'; Invoke-RawUI key Escape --settle | Out-Null
     Invoke-UI press key=open-workspace --settle | Out-Null
     Assert-Text '香港生产服务器 · 待连接'
+    Open-PaneMenu
+    if ((Get-ProductSnapshot) -notmatch '\[menuItem\] "连接"') { throw 'Connection menu missing' }
+    Invoke-RawUI key Escape --settle | Out-Null
     $snapshot = Read-UI
-    if ($snapshot -notmatch 'key=connect-pending' -or $snapshot -match 'key=connect-pending disabled') { throw 'Connection action missing' }
+    if ($snapshot -match 'key=(connect-pending|split-horizontal|font-larger|edit-profile)') { throw 'Workspace shows persistent action controls' }
     $snapshot | Set-Content -Encoding utf8 (Join-Path $directory 'workspace.txt')
     Invoke-UI screenshot (Join-Path $directory 'workspace.png') | Out-Null
 
@@ -100,6 +101,11 @@ try {
     $firstID = ($doc.profiles | Where-Object name -eq '香港生产服务器').id
     $secondID = ($doc.profiles | Where-Object name -eq '测试机').id
     if (!$firstID -or !$secondID) { throw 'Saved connection IDs missing' }
+    # Editing an unselected row by right-click must target that row.
+    Open-ProfileMenu $firstID
+    Invoke-RawUI press 'key={edit-profile}' --settle | Out-Null
+    Assert-Text 'value="香港生产服务器"'
+    Invoke-UI press key=cancel-profile --settle | Out-Null
     Invoke-UI fill key=search-profiles '香港' --settle | Out-Null
     Assert-Text '1 / 2 条连接'
     Assert-Absent '选择连接 测试机'
@@ -119,7 +125,7 @@ try {
     Invoke-UI fill key=profile-name '香港主机（已修改）' | Out-Null
     Invoke-UI fill key=profile-group '核心' | Out-Null
     Invoke-UI press key=save-profile --settle | Out-Null
-    Assert-Text '分组：核心'
+    if ((Get-Content -Raw (Join-Path $dataDir 'connections.json') | ConvertFrom-Json).profiles[0].group -ne '核心') { throw 'Edited group not saved' }
     Invoke-UI press key=favorite-profile --settle | Out-Null
     Invoke-UI press key=scope-favorites --settle | Out-Null
     Assert-Text '0 / 2 条连接'
@@ -131,13 +137,21 @@ try {
     Invoke-UI press key=toggle-connections --settle | Out-Null
     Assert-Absent 'key=search-profiles'
     Invoke-UI press key=toggle-connections --settle | Out-Null
+    Invoke-UI key Ctrl+B --settle | Out-Null
+    Assert-Absent 'key=search-profiles'
+    Invoke-UI key Ctrl+B --settle | Out-Null
+    Assert-Text 'key=search-profiles'
+    Invoke-UI key Ctrl+Shift+E --settle | Out-Null
+    Assert-Absent '传输队列'
+    Invoke-UI key Ctrl+Shift+E --settle | Out-Null
+    Assert-Text '传输队列'
     Stop-TestApp
 
     Start-TestApp
     Assert-Text '2 / 2 条连接'
     Select-Profile $firstID
     Assert-Text '香港主机（已修改）'
-    Assert-Text '分组：核心'
+    if ((Get-Content -Raw (Join-Path $dataDir 'connections.json') | ConvertFrom-Json).profiles[0].group -ne '核心') { throw 'Edited group not saved' }
     Invoke-UI press key=scope-recent --settle | Out-Null
     Assert-Text '1 / 2 条连接'
     Invoke-UI press key=scope- --settle | Out-Null
@@ -184,6 +198,9 @@ try {
     if (![Linq.Enumerable]::SequenceEqual([byte[]][IO.File]::ReadAllBytes($configPath), [byte[]]$badBytes)) { throw 'Invalid file was changed' }
 
     Write-Host "Connection library UI checks passed: $directory"
+} catch {
+    if ($process -and !$process.HasExited) { try { Read-UI | Set-Content -Encoding utf8 (Join-Path $directory 'failure.txt') } catch {} }
+    throw
 } finally {
     if ($process -and !$process.HasExited) { $process.Kill($true); $process.WaitForExit() }
     if ($process) { $process.Dispose() }

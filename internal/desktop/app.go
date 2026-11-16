@@ -30,6 +30,7 @@ type app struct {
 	layoutDone                           chan struct{}
 	layoutSnapshot                       string
 	layoutReadOnly                       bool
+	layoutActions                        []func()
 	terminalFocus                        int
 	revealedTabs                         map[int]int
 	focusedTerminal, lastFocusedTerminal int
@@ -104,20 +105,21 @@ func (a *app) selectedProfile() (library.Profile, bool) {
 	return a.profiles[i], true
 }
 
-func (a *app) openWorkspace(p library.Profile) {
+func (a *app) openWorkspace(p library.Profile) *workspace {
 	if err := a.store.MarkUsed(p.ID); err != nil {
 		a.actionError = err.Error()
-		return
+		return nil
 	}
 	a.refresh()
 	id, err := a.layout.Add(p.ID)
 	if err != nil {
 		a.actionError = err.Error()
-		return
+		return nil
 	}
 	tab := a.newWorkspace(id, p)
 	a.tabs = append(a.tabs, tab)
 	a.actionError = ""
+	return tab
 }
 
 func (a *app) newWorkspace(id int, p library.Profile) *workspace {

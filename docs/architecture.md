@@ -11,8 +11,9 @@
 | `internal/desktop/app.go` | 界面状态及配置、收藏、最近使用等操作 |
 | `internal/desktop/view.go` | 主布局、主题与全局反馈 |
 | `internal/desktop/sidebar.go` | 连接库、搜索和筛选 |
-| `internal/desktop/workspace.go` | 连接信息条、窗格树渲染、独立标签组及会话操作 |
+| `internal/desktop/workspace.go` | 窗格树渲染、平面标签组、状态点及按需搜索 |
 | `internal/desktop/layout.go` | 工作区恢复、后台合并保存及退出刷新 |
+| `internal/desktop/menus.go` | 连接项／标签右键菜单、窗格菜单、视图及筛选菜单 |
 | `internal/desktop/terminal_tools.go` | 官方终端搜索与字号操作 |
 | `internal/desktop/session.go` | 异步连接、终端生命周期、取消及断开 |
 | `internal/desktop/prompts.go` | 串行主机确认与凭据输入提示 |
@@ -41,6 +42,8 @@ P2 中 UI 负责操作、状态、终端实例与系统凭据集成；协议模�
 P3 将布局与运行中资源分开：`workspace.State` 只记录窗格、标签 ID、配置 ID 与展示偏好；`desktop.workspace` 按标签 ID 持有真实 SSH 连接、取消上下文和终端实例。移动或合并只改变标签归属，不释放连接；删除标签才释放对应资源。恢复根据配置 ID 读取当前配置并创建待连接状态，已删除配置不从布局复活。
 
 布局写入使用独立 goroutine、容量一的最新快照队列和 250 ms 合并窗口，UI 只提交不可变编码快照；退出前刷新，随后释放数据目录锁。严格限制文件大小、版本、树结构、ID 唯一性和比例范围；坏文件与外部修改不会被静默覆盖。终端搜索仍由 Ghostty 完成，界面不复制输出到另一个搜索缓存。
+
+连接详情与常驻会话工具条已移除，管理动作绑定连接项或标签对象。终端内部保留官方复制粘贴菜单；应用菜单使用框架的窗口内菜单，与真实 UI 自动化共享行为。菜单回调发生在窗格渲染期间，分屏、移动与合并先排队，整棵树渲染及焦点处理结束后执行，避免遍历中改变树结构。
 
 ## 工具与资料
 

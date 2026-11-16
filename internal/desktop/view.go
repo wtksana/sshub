@@ -10,7 +10,7 @@ import (
 func (a *app) view(c *ui.Context) {
 	a.focusedTerminal = 0
 	t := *c.Theme()
-	t.Spacing, t.Radius, t.FontSize = 4, 5, 13
+	t.Spacing, t.Radius, t.FontSize = 4, 3, 13
 	if runtime.GOOS == "windows" {
 		t.Font = "Microsoft YaHei UI"
 	}
@@ -19,14 +19,12 @@ func (a *app) view(c *ui.Context) {
 	}
 	c.SetTheme(t.WithAccent(ui.Hex("#2763b3")))
 	c.DisableAnimations()
+	c.SetMenuPresentation(ui.PopoverMenus)
 	ui.Column(c).Fill().Children(func() {
-		ui.Row(c).Padding(10, 14).Gap(10).AlignItems(ui.Center).Children(func() {
-			ui.Text(c, "SSHub").FontSize(18).Bold()
-			ui.Text(c, "服务器工作区").TextColor(t.TextMuted)
+		ui.Row(c).Height(34).Padding(0, 10).Gap(8).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, "SSHub").FontSize(13).Bold()
 			ui.Spacer(c)
-			ui.Button(c.Key("manage-hosts"), "已信任主机").OnClick(a.showHosts)
-			ui.Button(c.Key("toggle-connections"), "连接库").OnClick(func() { a.hideLeft = !a.hideLeft })
-			ui.Button(c.Key("toggle-files"), "文件面板").OnClick(func() { a.hideRight = !a.hideRight })
+			ui.Button(c.Key("app-menu"), "☰").Label("应用菜单").Tooltip("视图与主机信任").Padding(3, 7).Background(ui.Transparent).BorderWidth(0).Menu(a.appMenu)
 		})
 		ui.Divider(c)
 		if a.loadError != "" {
@@ -70,6 +68,22 @@ func (a *app) view(c *ui.Context) {
 			c.After(time.Millisecond)
 		}
 		a.lastFocusedTerminal = a.focusedTerminal
+	}
+	// Menu choices run while a pane is drawn. Change its tree only after all
+	// siblings have been drawn, so a merge cannot invalidate that traversal.
+	if len(a.layoutActions) > 0 {
+		actions := a.layoutActions
+		a.layoutActions = nil
+		for _, action := range actions {
+			action()
+		}
+		c.After(time.Millisecond)
+	}
+	if c.Shortcut(ui.Ctrl, ui.KeyB) {
+		a.hideLeft = !a.hideLeft
+	}
+	if c.Shortcut(ui.Ctrl|ui.Shift, ui.KeyE) {
+		a.hideRight = !a.hideRight
 	}
 	a.editorView(c)
 	a.captureLayout()

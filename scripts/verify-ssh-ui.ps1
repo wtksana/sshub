@@ -1,6 +1,7 @@
 param([switch]$SkipBuild)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
+. "$PSScriptRoot/ui-helpers.ps1"
 Push-Location $root
 $appProcess = $null
 $serverProcess = $null
@@ -18,11 +19,7 @@ try {
     $socket = Join-Path $directory 'app.sock'
     $env:MYGO_AUTOMATION_SESSION = 'sshub-ssh-' + [guid]::NewGuid().ToString('N')
 
-    function UI {
-        $output = & $cli @args
-        if ($LASTEXITCODE -ne 0) { throw "UI command failed: $($args[0])" }
-        return $output
-    }
+    function UI { return Invoke-ProductUI @args }
     function Snapshot { return (UI snapshot --full) -join "`n" }
     function Wait-Text([string]$text) { UI wait --text $text --timeout 8s --settle | Out-Null }
     function Press-Label([string]$label) {
@@ -72,7 +69,9 @@ try {
     function Open-Workspace {
         UI press key=profile-fixture --settle | Out-Null
         UI press key=open-workspace --settle | Out-Null
-        UI press key=connect-pending --settle | Out-Null
+        $id = ([regex]::Matches((Snapshot), 'key=tab-(\d+)') | ForEach-Object { [int]$_.Groups[1].Value } | Measure-Object -Maximum).Maximum
+        UI focus "key=tab-$id" --settle | Out-Null
+        UI key Ctrl+Shift+Enter --settle | Out-Null
     }
 
     $server = Start-Server

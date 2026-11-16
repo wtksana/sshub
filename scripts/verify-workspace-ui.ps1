@@ -1,6 +1,7 @@
 param([switch]$SkipBuild)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
+. "$PSScriptRoot/ui-helpers.ps1"
 Push-Location $root
 $appProcess = $null
 $servers = [Collections.Generic.List[Diagnostics.Process]]::new()
@@ -17,11 +18,7 @@ try {
     $cli = Join-Path $root 'build/tools/mygo-automation.exe'
     $socket = Join-Path $directory 'app.sock'
     $env:MYGO_AUTOMATION_SESSION = 'sshub-workspace-' + [guid]::NewGuid().ToString('N')
-    function UI {
-        $output = & $cli @args
-        if ($LASTEXITCODE -ne 0) { throw "UI command failed: $($args[0])" }
-        return $output
-    }
+    function UI { return Invoke-ProductUI @args }
     function Snapshot { return (UI snapshot --full) -join "`n" }
     function Wait-Text([string]$text) { UI wait --text $text --timeout 8s --settle | Out-Null }
     function Assert-Text([string]$text) { if (!(Snapshot).Contains($text)) { throw "Expected text: $text" } }
@@ -70,10 +67,13 @@ try {
     $trusted = @{}
     $tabs = [Collections.Generic.List[object]]::new()
     function Open-Session([string]$profileID, [string]$name, [string]$token) {
-        UI press "key=profile-$profileID" --settle | Out-Null
-        UI press key=open-workspace --settle | Out-Null
-        $id = ([regex]::Matches((Snapshot), 'key=tab-(\d+)') | ForEach-Object { [int]$_.Groups[1].Value } | Measure-Object -Maximum).Maximum
-        UI press key=connect-pending --settle | Out-Null
+        if ($tabs.Count -eq 0) {
+            UI click "key=profile-$profileID" --clicks 2 --settle | Out-Null
+        } else {
+            UI press "key=profile-$profileID" --settle | Out-Null
+            UI press key=open-workspace --settle | Out-Null
+        }
+        if ($tabs.Count -ne 0) { UI press key=connect-pending --settle | Out-Null }
         if (!$trusted.ContainsKey($profileID)) {
             Wait-Text '确认服务器身份'
             UI press key=accept-connection-prompt --settle | Out-Null
@@ -82,6 +82,8 @@ try {
         Wait-Text '输入服务器密码'
         UI fill key=connection-secret 'fixture-password-中文' | Out-Null
         UI press key=accept-connection-prompt --settle | Out-Null
+        Wait-Text "$name · 已连接"
+        $id = ([regex]::Matches((Snapshot), 'key=tab-(\d+)') | ForEach-Object { [int]$_.Groups[1].Value } | Measure-Object -Maximum).Maximum
         UI wait "key=terminal-$id" --timeout 8s --settle | Out-Null
         UI click "key=terminal-$id" | Out-Null
         UI type $token --settle | Out-Null
@@ -107,12 +109,14 @@ try {
     UI press key=split-vertical --settle | Out-Null
     Open-Session 'alpha' '开发服务器' 'SESSION_ALPHA_THREE'
     Open-Session 'beta' '测试服务器' 'SESSION_BETA_THREE'
-    UI press key=activate-pane-1 --settle | Out-Null
+    UI press "key=tab-$($tabs[0].id)" --settle | Out-Null
     UI press key=split-vertical --settle | Out-Null
     Open-Session 'alpha' '开发服务器' 'SESSION_ALPHA_FOUR'
     Open-Session 'beta' '测试服务器' 'SESSION_BETA_FOUR'
-    Assert-Text '4 个窗格 / 8 个会话'
-    if ((Snapshot) -notmatch 'key=split-horizontal disabled') { throw 'Four-pane control limit missing' }
+    Assert-WorkspaceCount 4 8
+    Open-PaneMenu
+    if ((Snapshot) -notmatch 'key="{split-horizontal}" disabled') { throw 'Four-pane control limit missing' }
+    Invoke-RawUI key Escape --settle | Out-Null
     foreach ($tab in $tabs) {
         UI press "key=tab-$($tab.id)" --settle | Out-Null
         UI press key=terminal-search --settle | Out-Null
@@ -120,6 +124,24 @@ try {
         Wait-Text '1 处匹配'
         UI press "key=search-close-$($tab.id)" --settle | Out-Null
     }
+    # Right-click a background tab: search must belong to that tab, not the current pane.
+    UI click "key=tab-$($tabs[0].id)" --button right --settle | Out-Null
+    UI screenshot (Join-Path $directory 'tab-context-menu.png') | Out-Null
+    Invoke-RawUI press 'key={terminal-search}' --settle | Out-Null
+    UI fill "key=terminal-query-$($tabs[0].id)" $tabs[0].token --settle | Out-Null
+    Wait-Text '1 处匹配'
+    Assert-FileServer $tabs[0].name
+    UI screenshot (Join-Path $directory 'tab-context-search.png') | Out-Null
+    UI press "key=search-close-$($tabs[0].id)" --settle | Out-Null
+    UI click "key=terminal-$($tabs[0].id)" --button right --settle | Out-Null
+    if ((Snapshot) -notmatch '\[menuItem\] "(Paste|粘贴)"') { throw 'Terminal clipboard menu missing' }
+    Invoke-RawUI key Escape --settle | Out-Null
+    UI click "key=terminal-$($tabs[0].id)" --settle | Out-Null
+    UI key Ctrl+Shift+F --settle | Out-Null
+    UI wait "key=terminal-query-$($tabs[0].id)" --settle | Out-Null
+    UI press "key=search-close-$($tabs[0].id)" --settle | Out-Null
+    UI press "key=tab-$($tabs[1].id)" --settle | Out-Null
+    if ((Snapshot) -match 'key=(connect-pending|split-horizontal|font-larger|edit-profile)') { throw 'Persistent workspace actions remain' }
     UI screenshot (Join-Path $directory 'four-panes-eight-sessions.png') | Out-Null
 
     # A pointer click in a terminal must select its pane without sending a command elsewhere.
@@ -139,28 +161,28 @@ try {
     UI press "key=search-next-$($searchTab.id)" --settle | Out-Null
     UI press "key=search-previous-$($searchTab.id)" --settle | Out-Null
     UI press key=font-larger --settle | Out-Null
-    Assert-Text '当前 14'
+    Assert-FontSize 14
     UI press key=font-reset --settle | Out-Null
-    Assert-Text '当前 13'
+    Assert-FontSize 13
     UI press key=font-larger --settle | Out-Null
     UI press key=font-smaller --settle | Out-Null
-    Assert-Text '当前 13'
+    Assert-FontSize 13
     UI press key=font-larger --settle | Out-Null
     UI screenshot (Join-Path $directory 'search-and-zoom.png') | Out-Null
     UI press "key=search-close-$($searchTab.id)" --settle | Out-Null
     UI press key=move-tab --settle | Out-Null
     UI wait "key=terminal-$($searchTab.id)" --settle | Out-Null
     Assert-FileServer $searchTab.name
-    Assert-Text '4 个窗格 / 8 个会话'
+    Assert-WorkspaceCount 4 8
     UI press key=merge-pane --settle | Out-Null
-    Assert-Text '3 个窗格 / 8 个会话'
+    Assert-WorkspaceCount 3 8
 
     # Same-profile sessions retain distinct IDs; closing one cannot close its sibling.
     UI press "key=tab-$($tabs[0].id)" --settle | Out-Null
     UI press "key=close-tab-$($tabs[0].id)" --settle | Out-Null
     Wait-Text '关闭终端会话？'
     Press-Label '关闭会话'
-    Assert-Text '3 个窗格 / 7 个会话'
+    Assert-WorkspaceCount 3 7
     UI press "key=tab-$($tabs[1].id)" --settle | Out-Null
     UI wait "key=terminal-$($tabs[1].id)" --settle | Out-Null
     Assert-FileServer '开发服务器'
@@ -169,7 +191,6 @@ try {
     Wait-Text '1 处匹配'
     UI press "key=search-close-$($tabs[1].id)" --settle | Out-Null
     $servers[0].StandardInput.WriteLine('disconnect')
-    UI wait key=connect-pending --timeout 8s --settle | Out-Null
     Wait-Text '开发服务器 · 已断开'
     UI press key=terminal-search --settle | Out-Null
     UI fill "key=terminal-query-$($tabs[1].id)" 'SESSION_ALPHA_TWO' --settle | Out-Null
@@ -201,13 +222,13 @@ try {
     if ($layout.root.ratio -eq 50) { throw 'Pane divider position was not saved' }
     if ($layout.window_width -lt 900 -or $layout.window_height -lt 620) { throw 'Window dimensions were not saved' }
     Start-App
-    Assert-Text '3 个窗格 / 7 个会话'
+    Assert-WorkspaceCount 3 7
     if ((Snapshot) -match '\[group\] "Terminal"|· 已连接|connection-secret|确认服务器身份') { throw 'Restart restored network sessions or output' }
     if ((Snapshot).Contains('key=file-server')) { throw 'Hidden file panel preference not restored' }
     UI press key=toggle-files --settle | Out-Null
     Wait-Text '待连接'
     UI press "key=tab-$($searchTab.id)" --settle | Out-Null
-    Assert-Text '当前 14'
+    Assert-FontSize 14
     UI screenshot (Join-Path $directory 'restored-pending.png') | Out-Null
     Stop-App
 
@@ -216,9 +237,9 @@ try {
     $smallLayout.hide_left = $true; $smallLayout.hide_right = $true
     $smallLayout | ConvertTo-Json -Depth 20 | Set-Content -Encoding utf8 (Join-Path $dataDir 'workspace.json')
     Start-App
-    Assert-Text '3 个窗格 / 7 个会话'
+    Assert-WorkspaceCount 3 7
     UI press key=merge-pane --settle | Out-Null
-    Assert-Text '2 个窗格 / 7 个会话'
+    Assert-WorkspaceCount 2 7
     UI screenshot (Join-Path $directory 'minimum-window.png') | Out-Null
     Stop-App
 
