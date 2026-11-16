@@ -110,6 +110,21 @@ try {
     UI click $term | Out-Null
     UI type 'SSH_UI_ECHO_中文_123' --settle | Out-Null
     UI key Enter --settle | Out-Null
+    # Apply theme and font to a live Ghostty terminal, then keep typing.
+    UI press key=app-menu --settle | Out-Null
+    Invoke-RawUI press 'key={settings}' --settle | Out-Null
+    UI press key=theme-dark | Out-Null
+    UI fill key=settings-font 'Consolas' | Out-Null
+    UI fill key=settings-size '16' | Out-Null
+    UI press key=settings-reset-tabs | Out-Null
+    UI press key=settings-save --settle | Out-Null
+    Wait-Text '设置已保存'
+    Assert-FontSize 16
+    $term = [regex]::Match((Snapshot), '(?m)^\s*(@e\d+) \[group\] "Terminal"').Groups[1].Value
+    UI click $term | Out-Null
+    UI type 'SETTINGS_LIVE_ECHO_中文' --settle | Out-Null
+    UI key Enter --settle | Out-Null
+    UI screenshot (Join-Path $directory 'terminal-settings.png') | Out-Null
     UI screenshot (Join-Path $directory 'terminal.png') | Out-Null
     UI press key=toggle-files --settle | Out-Null
     UI screenshot (Join-Path $directory 'terminal-resized.png') | Out-Null

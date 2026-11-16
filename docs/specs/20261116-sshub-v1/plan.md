@@ -1,6 +1,6 @@
 # SSHub 首版实施计划
 
-状态：2026-11-16 整体方案已确认，P1–P4 已实现并完成所列阶段验证，P5–P6 尚未实现。结果见 [P1](issues/01-connection-library.md)、[P2](issues/03-secure-ssh.md)、[P3](issues/04-workspace.md) 和 [P4](issues/07-sftp-files.md)，其中列明实测范围与待补验收。P3 后已按反馈完成[界面简化](issues/05-simplify-interface.md)，中间只保留标签与终端，并完成[内置标题栏](issues/06-custom-titlebar.md)。
+状态：2026-11-16 整体方案已确认，P1–P5 已实现并完成所列阶段验证，P6 性能与发行尚未完成。结果见 [P1](issues/01-connection-library.md)、[P2](issues/03-secure-ssh.md)、[P3](issues/04-workspace.md)、[P4](issues/07-sftp-files.md) 和 [P5](issues/08-settings-migration.md)，其中列明实测范围与待补验收。P3 后已按反馈完成[界面简化](issues/05-simplify-interface.md)，中间只保留标签与终端，并完成[内置标题栏](issues/06-custom-titlebar.md)。
 
 ## 开发原则
 

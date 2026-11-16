@@ -15,7 +15,7 @@ func (a *app) zoom(tab *workspace, steps int, reset bool) {
 	}
 	size := saved.FontSize + float32(steps)
 	if reset {
-		size = 13
+		size = float32(a.preferences.FontSize)
 	}
 	if size < 8 {
 		size = 8
@@ -25,7 +25,7 @@ func (a *app) zoom(tab *workspace, steps int, reset bool) {
 	}
 	saved.FontSize = size
 	if tab.term != nil {
-		tab.term.SetFont(terminal.Font{Family: "Cascadia Mono", Size: size})
+		tab.term.SetFont(terminal.Font{Family: a.preferences.FontFamily, Size: size})
 	}
 }
 

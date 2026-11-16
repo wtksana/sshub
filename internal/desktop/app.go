@@ -15,6 +15,9 @@ import (
 type app struct {
 	dir                                  string
 	store                                *library.Store
+	preferences                          library.Preferences
+	settings                             *settingsEditor
+	migration                            *migrationEditor
 	profiles                             []library.Profile
 	loadError, actionError               string
 	query, scope, group                  string
@@ -61,7 +64,7 @@ type app struct {
 }
 
 func newApp(dir string) *app {
-	a := &app{dir: dir, leftSize: 260, contentPercent: 66, group: "全部分组", prompts: make(chan *connectionPrompt, 16), revealedTabs: map[int]int{}}
+	a := &app{dir: dir, preferences: library.DefaultPreferences(), leftSize: 260, contentPercent: 66, group: "全部分组", prompts: make(chan *connectionPrompt, 16), revealedTabs: map[int]int{}}
 	a.workCtx, a.workCancel = context.WithCancel(context.Background())
 	a.load()
 	a.transferQueue = make(chan *transferTask, 256)
@@ -88,6 +91,7 @@ func (a *app) load() {
 		return
 	}
 	a.store, a.loadError = s, ""
+	a.preferences = s.Preferences()
 	a.trust = connection.NewTrustStore(a.dir)
 	a.refresh()
 	a.restoreLayout()
@@ -142,6 +146,7 @@ func (a *app) openWorkspace(p library.Profile) *workspace {
 		return nil
 	}
 	tab := a.newWorkspace(id, p)
+	a.setDefaultFontSize(id)
 	a.tabs = append(a.tabs, tab)
 	a.actionError = ""
 	return tab

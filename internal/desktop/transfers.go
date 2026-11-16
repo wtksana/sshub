@@ -107,6 +107,7 @@ func (a *app) retryTransfer(task *transferTask) {
 			return
 		}
 		tab = &workspace{key: id, profile: task.profile, jump: task.jump, status: "待连接"}
+		a.setDefaultFontSize(id)
 		a.tabs = append(a.tabs, tab)
 	}
 	if tab.client != nil {

@@ -10,17 +10,18 @@ import (
 )
 
 type Profile struct {
-	ID           string    `json:"id"`
-	Name         string    `json:"name"`
-	Host         string    `json:"host"`
-	Port         int       `json:"port"`
-	Username     string    `json:"username"`
-	Auth         string    `json:"auth"`
-	IdentityPath string    `json:"identity_path,omitempty"`
-	Group        string    `json:"group,omitempty"`
-	Favorite     bool      `json:"favorite"`
-	LastUsed     time.Time `json:"last_used,omitempty"`
-	JumpID       string    `json:"jump_id,omitempty"`
+	ID                  string    `json:"id"`
+	Name                string    `json:"name"`
+	Host                string    `json:"host"`
+	Port                int       `json:"port"`
+	Username            string    `json:"username"`
+	Auth                string    `json:"auth"`
+	IdentityPath        string    `json:"identity_path,omitempty"`
+	Group               string    `json:"group,omitempty"`
+	Favorite            bool      `json:"favorite"`
+	LastUsed            time.Time `json:"last_used,omitempty"`
+	JumpID              string    `json:"jump_id,omitempty"`
+	IdentityNeedsReview bool      `json:"identity_needs_review,omitempty"`
 }
 
 func Validate(p Profile) error {
@@ -44,7 +45,7 @@ func Validate(p Profile) error {
 	switch p.Auth {
 	case "password", "agent":
 	case "private_key":
-		if strings.TrimSpace(p.IdentityPath) == "" {
+		if strings.TrimSpace(p.IdentityPath) == "" && !p.IdentityNeedsReview {
 			return errors.New("请选择私钥文件路径")
 		}
 	default:

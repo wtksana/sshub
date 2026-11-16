@@ -49,6 +49,9 @@ func (a *app) sidebar(c *ui.Context) {
 			row := ui.ButtonBase(c.Key("profile-"+p.ID)).Label("选择连接 "+p.Name).AccessSelected(a.selected == p.ID).FillWidth().Padding(7, 8).Radius(2)
 			if a.selected == p.ID {
 				row.Background(ui.Hex("#e6edf6"))
+				if t.Dark {
+					row.Background(ui.Hex("#263b57"))
+				}
 			}
 			row.Children(func() {
 				ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {

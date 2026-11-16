@@ -10,6 +10,12 @@ import (
 func (a *app) view(c *ui.Context) {
 	a.focusedTerminal = 0
 	t := *c.Theme()
+	switch a.preferences.Theme {
+	case "light":
+		t = *ui.LightTheme()
+	case "dark":
+		t = *ui.DarkTheme()
+	}
 	t.Spacing, t.Radius, t.FontSize = 4, 3, 13
 	if runtime.GOOS == "windows" {
 		t.Font = "Microsoft YaHei UI"
@@ -85,6 +91,8 @@ func (a *app) view(c *ui.Context) {
 	a.captureLayout()
 	a.sessionDialogs(c)
 	if !a.confirmQuit && !a.confirmCloseTab {
+		a.settingsView(c)
+		a.migrationView(c)
 		a.fileDialogs(c)
 	}
 	a.promptView(c)

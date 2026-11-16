@@ -10,12 +10,13 @@ import (
 )
 
 type editor struct {
-	profile   library.Profile
-	port      string
-	auth      string
-	err       string
-	advanced  bool
-	jumpLabel string
+	identityReviewed bool
+	profile          library.Profile
+	port             string
+	auth             string
+	err              string
+	advanced         bool
+	jumpLabel        string
 }
 
 func (a *app) beginEdit(p library.Profile) {
@@ -79,6 +80,11 @@ func (a *app) saveDraft() {
 	default:
 		p.Auth, p.IdentityPath = "agent", ""
 	}
+	if p.Auth == "private_key" && p.IdentityNeedsReview && !a.draft.identityReviewed {
+		a.draft.err = "请核对本机私钥路径并勾选确认"
+		return
+	}
+	p.IdentityNeedsReview = false
 	saved, err := a.store.Upsert(p)
 	if err != nil {
 		a.draft.err = err.Error()
@@ -114,6 +120,10 @@ func (a *app) editorView(c *ui.Context) {
 			})
 			if a.draft.auth == "私钥文件" {
 				field("profile-identity", "私钥路径", `C:\Users\you\.ssh\id_ed25519`, &a.draft.profile.IdentityPath)
+				if a.draft.profile.IdentityNeedsReview {
+					ui.Text(c, "此路径来自导入文件，连接前需要重新核对。").Wrap()
+					ui.Checkbox(c.Key("identity-reviewed"), &a.draft.identityReviewed, "已核对本机私钥路径")
+				}
 			}
 			ui.Checkbox(c.Key("profile-favorite"), &a.draft.profile.Favorite, "加入收藏")
 			ui.Checkbox(c.Key("profile-advanced"), &a.draft.advanced, "高级选项")

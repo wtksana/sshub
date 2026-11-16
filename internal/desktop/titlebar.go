@@ -5,7 +5,7 @@ import "github.com/egoist/mygo/ui"
 func (a *app) titlebar(c *ui.Context) {
 	ui.Row(c).Height(34).Shrink(0).AlignItems(ui.Center).Children(func() {
 		ui.Text(c, "SSHub").FontSize(13).Bold().Padding(0, 10).DragWindow()
-		ui.Button(c.Key("app-menu"), "☰").Label("应用菜单").Tooltip("视图与主机信任").Padding(3, 7).Background(ui.Transparent).BorderWidth(0).Menu(a.appMenu)
+		ui.Button(c.Key("app-menu"), "☰").Label("应用菜单").Tooltip("设置、配置迁移与视图").Padding(3, 7).Background(ui.Transparent).BorderWidth(0).Menu(a.appMenu)
 		ui.Box(c.Key("titlebar-drag")).Label("拖动窗口").Height(34).Grow(1).DragWindow()
 		if a.win == nil {
 			return

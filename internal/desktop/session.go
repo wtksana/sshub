@@ -117,6 +117,11 @@ func (a *app) connect(tab *workspace) {
 	if busy(tab) {
 		return
 	}
+	if tab.profile.IdentityNeedsReview || (tab.jump != nil && tab.jump.IdentityNeedsReview) {
+		tab.status, tab.err = "连接失败", "导入的私钥路径尚未核对，请编辑目标或跳板机连接并确认本机私钥路径，然后打开新工作区"
+		tab.retryRequests = nil
+		return
+	}
 	a.release(tab)
 	if tab.term != nil {
 		term := tab.term
@@ -127,7 +132,8 @@ func (a *app) connect(tab *workspace) {
 	tab.cancel, tab.status, tab.err = cancel, "连接中", ""
 	tab.searchOpen, tab.searchApplied = false, ""
 	attempt := tab.attempt
-	fontSize := float32(13)
+	fontSize := float32(a.preferences.FontSize)
+	fontFamily := a.preferences.FontFamily
 	if _, saved := a.layout.Locate(tab.key); saved != nil {
 		fontSize = saved.FontSize
 	}
@@ -168,7 +174,7 @@ func (a *app) connect(tab *workspace) {
 			return
 		}
 		term, err := terminal.New(terminal.Options{
-			Conn: shell, Font: terminal.Font{Family: "Cascadia Mono", Size: fontSize}, Scrollback: 2 << 20, ImageLimit: -1,
+			Conn: shell, Font: terminal.Font{Family: fontFamily, Size: fontSize}, Scrollback: 2 << 20, ImageLimit: -1,
 			OnZoom:   func(z terminal.Zoom) bool { a.zoom(tab, z.Steps, z.Reset); return true },
 			OnSearch: func(terminal.SearchStatus) { a.dispatch(func() {}) },
 			// Status is shown in the toolbar; an injected exit line can overwrite a partial remote line.
@@ -213,6 +219,7 @@ func (a *app) connect(tab *workspace) {
 			tab.cancel = nil
 			tab.transport, tab.shell = newTransport(client), shell
 			tab.term, tab.client, tab.status = term, client, "已连接"
+			a.zoom(tab, 0, false)
 			select {
 			case <-term.Done():
 				a.release(tab)

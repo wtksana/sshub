@@ -19,8 +19,9 @@ import (
 const maxConfigBytes = 8 << 20
 
 type Document struct {
-	Version  int       `json:"version"`
-	Profiles []Profile `json:"profiles"`
+	Version     int          `json:"version"`
+	Profiles    []Profile    `json:"profiles"`
+	Preferences *Preferences `json:"preferences,omitempty"`
 }
 
 // Store owns an OS-held lock until Close, including while the UI is idle.
@@ -105,6 +106,11 @@ func validateDocument(doc Document) error {
 	if doc.Version != 1 {
 		return fmt.Errorf("不支持的配置版本 %d，请使用兼容版本的软件", doc.Version)
 	}
+	if doc.Preferences != nil {
+		if err := ValidatePreferences(*doc.Preferences); err != nil {
+			return err
+		}
+	}
 	ids := map[string]bool{}
 	for _, p := range doc.Profiles {
 		if p.ID == "" || ids[p.ID] {
@@ -145,7 +151,7 @@ func (s *Store) Upsert(p Profile) (Profile, error) {
 			return Profile{}, errors.New("该分组中已有同名连接，请更换名称")
 		}
 	}
-	next := Document{Version: 1, Profiles: slices.Clone(s.doc.Profiles)}
+	next := Document{Version: 1, Profiles: slices.Clone(s.doc.Profiles), Preferences: s.doc.Preferences}
 	if p.ID == "" {
 		id := make([]byte, 16)
 		if _, err := rand.Read(id); err != nil {
@@ -177,14 +183,14 @@ func (s *Store) Delete(id string) error {
 	if slices.ContainsFunc(s.doc.Profiles, func(v Profile) bool { return v.JumpID == id }) {
 		return errors.New("该连接正在被其他连接用作跳板机，请先修改引用它的连接配置")
 	}
-	next := Document{Version: 1, Profiles: slices.Delete(slices.Clone(s.doc.Profiles), i, i+1)}
+	next := Document{Version: 1, Profiles: slices.Delete(slices.Clone(s.doc.Profiles), i, i+1), Preferences: s.doc.Preferences}
 	return s.save(next)
 }
 
 func (s *Store) MarkUsed(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	next := Document{Version: 1, Profiles: slices.Clone(s.doc.Profiles)}
+	next := Document{Version: 1, Profiles: slices.Clone(s.doc.Profiles), Preferences: s.doc.Preferences}
 	i := slices.IndexFunc(next.Profiles, func(v Profile) bool { return v.ID == id })
 	if i < 0 {
 		return errors.New("连接配置已不存在")
