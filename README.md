@@ -100,7 +100,7 @@ Go 测试覆盖配置持久化、100 条连接筛选、双实例锁、外部修�
 
 `verify-openssh-ui.ps1 -OpenSSHDirectory <OpenSSH-Win64目录>` 使用临时密钥、独立配置及回环高端口运行真实便携 OpenSSH，不安装系统服务。已验证产品主机指纹核对、私钥认证、Windows PTY shell、SFTP 浏览／新建目录，以及真实 Vim 中文编辑、保存和退出恢复；组件版本与复现步骤见[OpenSSH／Vim 专项](docs/verification/20261116-openssh.md)。
 
-中文输入法组合提交、真实 Linux OpenSSH／Unix chmod 和 BusyBox top、正式版缓存启动可操作均已补齐；见[原生输入与启动](docs/verification/20261116-native-input.md)和[Linux 服务器专项](docs/verification/20261116-linux-openssh.md)。剩余系统拖放、实际系统 Agent 服务、重启冷启动和干净 Windows 环境；复测入口见[剩余验收操作](docs/verification/remaining-acceptance.md)，完整状态见[首版验收记录](docs/specs/20261116-sshub-v1/acceptance.md)。
+中文输入法组合提交、真实 Linux OpenSSH／Unix chmod 和 BusyBox top、正式版缓存启动可操作均已补齐；见[原生输入与启动](docs/verification/20261116-native-input.md)和[Linux 服务器专项](docs/verification/20261116-linux-openssh.md)。实际[系统 OpenSSH Agent](docs/verification/20261116-system-agent.md)也已验收，临时密钥和服务状态已恢复。剩余系统拖放、重启冷启动和干净 Windows 环境；复测入口见[剩余验收操作](docs/verification/remaining-acceptance.md)，完整状态见[首版验收记录](docs/specs/20261116-sshub-v1/acceptance.md)。
 
 调试验证后可重新运行 `./scripts/build.ps1` 生成正式构建。如果当前程序占用默认构建目录，可用 `./scripts/build.ps1 -OutputDirectory build/titlebar` 生成到独立目录；验证脚本对应使用 `-BuildDirectory build/titlebar`。构建脚本只对当前进程设置 Go 备用源，结束后恢复环境；可通过 `-Proxy` 指定来源。
 

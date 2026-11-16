@@ -26,7 +26,7 @@ function Invoke-AgentTool([string[]]$Arguments, [switch]$AllowEmpty) {
         if (!$process.WaitForExit(10000)) { $process.Kill(); $process.WaitForExit(); throw 'System Agent tool timed out' }
         $text = $output.GetAwaiter().GetResult()
         $errorText = $errors.GetAwaiter().GetResult()
-        if ($process.ExitCode -ne 0 -and !($AllowEmpty -and $process.ExitCode -eq 1 -and $text -match 'no identities')) { throw "ssh-add failed ($($process.ExitCode)): $errorText" }
+        if ($process.ExitCode -ne 0 -and !($AllowEmpty -and $process.ExitCode -eq 1 -and ($text + $errorText) -match 'no identities')) { throw "ssh-add failed ($($process.ExitCode)): $errorText" }
         return $text
     } finally { $process.Dispose() }
 }
@@ -55,6 +55,15 @@ try {
         Start-Sleep -Milliseconds 50
     }
     $server = Get-Content -Raw -Encoding utf8 (Join-Path $serverDir 'server.json') | ConvertFrom-Json
+    # Restrict only this generated key; OpenSSH rejects inherited broad ACLs.
+    $keyAcl = [Security.AccessControl.FileSecurity]::new()
+    $keyAcl.SetAccessRuleProtection($true, $false)
+    $keyOwner = [Security.Principal.WindowsIdentity]::GetCurrent().User
+    $keyAcl.SetOwner($keyOwner)
+    foreach ($sid in @($keyOwner.Value, 'S-1-5-18', 'S-1-5-32-544')) {
+        $keyAcl.AddAccessRule([Security.AccessControl.FileSystemAccessRule]::new([Security.Principal.SecurityIdentifier]::new($sid), 'FullControl', 'Allow'))
+    }
+    Set-Acl -LiteralPath $server.identity -AclObject $keyAcl
     $publicKey = & $keygen -y -f $server.identity
     if ($LASTEXITCODE -ne 0 -or !$publicKey) { throw 'Could not derive fixture public key' }
     $publicKey | Set-Content -Encoding utf8 ($server.identity + '.pub')

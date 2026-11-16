@@ -41,3 +41,5 @@ Go 全仓 test／vet 已通过；新增目标绑定测试后仅补该用例及 d
 补齐[便携包复测入口](../../../verification/20261116-portable-runtime.md)：独立运行校验脚本随包分发，实际 Windows PowerShell 5.1 验证文件哈希、隔离启动／退出、更换目录保留数据通过，篡改 DLL 在启动前拒绝。候选 ZIP 更新为 `build/releases/20261116-222601/SSHub-0.1.0-windows-amd64.zip`，SHA256 `b91cdf11c1737a876a5874095389c9f72d94bcab265abf62c29ac333b09c2605`，EXE 与已有正式性能样本一致。新增[剩余人工／环境验收步骤](../../../verification/remaining-acceptance.md)和文件／文件夹拖入的内容核对脚本；仅校验器正反路径通过，不冒充系统拖放成功。当前系统 Agent 为 Stopped／Disabled，未改变服务或重启电脑；干净 Windows、冷启动及系统拖放仍待证据。
 
 已准备真实系统 Agent 窗口专项脚本，要求服务已启动，不自行变更服务；临时密钥单独添加／移除，并核对原有身份集合。语法与“服务停止时在副作用前拒绝”路径通过，成功路径尚未执行；临时启用 Disabled／Stopped 服务的用户确认仍待回复。没有将此准备工作标为系统 Agent 验收通过。
+
+用户已授权临时启用系统 Agent，随后完成[真实服务专项](../../../verification/20261116-system-agent.md)：系统 OpenSSH 9.5p2、默认命名管道、临时 Ed25519 签名认证、主机指纹核对、SFTP 中文列表和终端回显通过。原身份集合为空，添加后只移除本次密钥并确认恢复；外层 finally 将服务恢复为原 Disabled／Stopped。首次生成测试私钥继承 ACL 被 OpenSSH 拒绝，已仅对该临时文件修正 ACL 后完整通过；未修改产品。剩余系统拖放、重启冷启动与干净 Windows 环境，P6 保持 claimed。

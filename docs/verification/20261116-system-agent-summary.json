@@ -1,0 +1,30 @@
+{
+  "defaultNamedPipe": true,
+  "cleanExit": true,
+  "hostFingerprintMatched": true,
+  "sshAddSHA256": "D374788249C32DA4F48DC28B6DEC4BCE355456CC700A29031F5247F1B41649B5",
+  "sftpUnicodeListing": true,
+  "passed": true,
+  "serviceSettingsChangedByScript": false,
+  "temporaryIdentity": "SHA256:YthcNtbq3I9c881Wdnp44GWBdl3uboPc/SonZRpcR9c",
+  "systemAgentService": true,
+  "terminalEcho": true,
+  "preexistingIdentityCount": 0,
+  "originalIdentitySetRestored": true,
+  "service_before": {
+    "original_running": false,
+    "original_start": "Disabled",
+    "authorized_temporary_change": true,
+    "at": "2026-11-16T23:49:14.1928718+08:00"
+  },
+  "service_after": {
+    "status": "Stopped",
+    "start_type": "Disabled",
+    "matches_original": true,
+    "at": "2026-11-16T23:49:16.1975873+08:00"
+  },
+  "systemAgentVersion": "OpenSSH_9.5p2 for Windows",
+  "systemAgentFileVersion": "9.5.6.4",
+  "systemAgentSHA256": "C7D52CF9DCE67BF3D67AEC4267E28EA2B7DFCFBF9A7A23DB84CD8F05318E7B77",
+  "screenshotVisuallyReviewed": true
+}

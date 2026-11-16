@@ -45,7 +45,7 @@
 
 - P6 原生集成专项补齐跨服务器上传／关闭来源终端、Windows 剪贴板中文空格往返及系统主题实时切换，见[验证记录](../../verification/20261116-native-integration.md)；系统拖放因工具不支持跨源窗口边界仍待实际验收；重启冷启动与全新无工具链机器也待补。
 
-- 后续已补齐[真实 Windows OpenSSH／Vim](../../verification/20261116-openssh.md) 的指纹核对、私钥认证、SFTP 操作与中文编辑保存／退出恢复；后续 Linux OpenSSH／Unix 权限／BusyBox top 已通过独立 Alpine 虚拟机补齐；系统 Agent 服务仍需对应环境证据。
+- 后续已补齐[真实 Windows OpenSSH／Vim](../../verification/20261116-openssh.md) 的指纹核对、私钥认证、SFTP 操作与中文编辑保存／退出恢复；后续 Linux OpenSSH／Unix 权限／BusyBox top 已通过独立 Alpine 虚拟机补齐；系统 Agent 已在授权后通过实际服务补齐，见[专项](../../verification/20261116-system-agent.md)，临时密钥和服务状态已恢复。
 
 - P6 已完成正式十分钟负载、资源收敛、ZIP 及隔离升级验证，结果见[性能报告](../../performance/20261116-product.md)。单终端／八终端内存目标通过；首版整体验收仍进行中，缺失证据见[逐项验收](acceptance.md)和[09 任务进展](issues/09-performance-release.md)。
 
