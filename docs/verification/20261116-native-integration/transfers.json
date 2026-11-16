@@ -1,0 +1,16 @@
+{
+  "scenario": "Native multi-file picker; active upload and queued upload retain A:/inbox after switching to B:/other and closing A terminal",
+  "files": [
+    {
+      "destination": "server-a:/inbox/持续上传 中文.bin",
+      "sha256": "A538215662C665E422FEDFAE809D197E1DAA285156B7BB9F1F192E87F8088C46",
+      "file": "持续上传 中文.bin"
+    },
+    {
+      "destination": "server-a:/inbox/排队上传.txt",
+      "sha256": "D390A9A17F21B3932C7127A0DE5392BEE489DE4A6D6329AA715F3DDDCAE4268C",
+      "file": "排队上传.txt"
+    }
+  ],
+  "passed": true
+}

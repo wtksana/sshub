@@ -1,0 +1,9 @@
+{
+  "outputMatchesExactly": true,
+  "clipboardSentinelReplaced": true,
+  "passed": true,
+  "spaces": true,
+  "nativeCopyMenu": true,
+  "scenario": "Windows clipboard -> terminal paste -> SSH fixture echo -> output search -> select all -> Windows clipboard",
+  "unicode": true
+}

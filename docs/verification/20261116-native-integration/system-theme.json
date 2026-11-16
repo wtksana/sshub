@@ -1,0 +1,7 @@
+{
+  "originalModeRestored": true,
+  "darkEchoSearchMatches": 1,
+  "passed": true,
+  "scenario": "Windows Settings mode light -> dark -> light while SSHub stays running with system preference",
+  "lightEchoSearchMatches": 1
+}

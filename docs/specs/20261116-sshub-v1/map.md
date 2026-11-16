@@ -37,6 +37,8 @@
 
 ## Fog
 
+- P6 原生集成专项补齐跨服务器上传／关闭来源终端、Windows 剪贴板中文空格往返及系统主题实时切换，见[验证记录](../../verification/20261116-native-integration.md)；系统拖放、输入法组合、真实 OpenSSH／交互程序与启动可操作计时等证据仍待补充。
+
 - P6 已完成正式十分钟负载、资源收敛、ZIP 及隔离升级验证，结果见[性能报告](../../performance/20261116-product.md)。单终端／八终端内存目标通过；首版整体验收仍进行中，缺失证据见[逐项验收](acceptance.md)和[09 任务进展](issues/09-performance-release.md)。
 
 - 全部主分支已逐项确认，参见 [规格](spec.md) 和 [实施计划](plan.md)。
