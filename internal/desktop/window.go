@@ -31,6 +31,11 @@ func Run(dir string) error {
 		w.OnClose(func(e *mygo.CloseEvent) {
 			rememberSize()
 			if !a.allowQuit {
+				if a.hasTransfers() {
+					e.PreventDefault()
+					w.Update(func() { a.confirmQuit = true })
+					return
+				}
 				for _, tab := range a.tabs {
 					if busy(tab) {
 						e.PreventDefault()

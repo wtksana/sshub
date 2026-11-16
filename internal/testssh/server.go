@@ -12,7 +12,9 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 
+	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -25,6 +27,8 @@ type Server struct {
 	UserKey                     ed25519.PrivateKey
 	Identity, EncryptedIdentity string
 	Sizes                       chan [2]uint32
+	Root                        string
+	WriteDelay                  time.Duration
 }
 
 const Password = "fixture-password-中文"
@@ -44,6 +48,10 @@ func Start(dir string) (*Server, error) {
 		return nil, err
 	}
 	s := &Server{Host: host, UserKey: user, Sizes: make(chan [2]uint32, 128), connections: map[net.Conn]bool{}}
+	s.Root = filepath.Join(dir, "files")
+	if err := os.MkdirAll(s.Root, 0700); err != nil {
+		return nil, err
+	}
 	for _, encrypted := range []bool{false, true} {
 		var block *pem.Block
 		name := "identity"
@@ -194,6 +202,25 @@ func (s *Server) channel(incoming ssh.NewChannel) {
 		case "shell":
 			req.Reply(true, nil)
 			go func() { io.WriteString(channel, "\r\nSSHub local SSH fixture ready\r\n"); io.Copy(channel, channel) }()
+		case "subsystem":
+			var subsystem struct{ Name string }
+			if ssh.Unmarshal(req.Payload, &subsystem) != nil || subsystem.Name != "sftp" {
+				req.Reply(false, nil)
+				continue
+			}
+			root, err := os.OpenRoot(s.Root)
+			if err != nil {
+				req.Reply(false, nil)
+				continue
+			}
+			req.Reply(true, nil)
+			h := &rootedFiles{root: root, delay: s.WriteDelay}
+			server := sftp.NewRequestServer(channel, sftp.Handlers{FileGet: h, FilePut: h, FileCmd: h, FileList: h})
+			go ssh.DiscardRequests(reqs)
+			server.Serve()
+			server.Close()
+			root.Close()
+			return
 		default:
 			req.Reply(false, nil)
 		}

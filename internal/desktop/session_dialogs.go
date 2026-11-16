@@ -15,10 +15,24 @@ func (a *app) showHosts() {
 }
 
 func (a *app) sessionDialogs(c *ui.Context) {
-	if ui.AlertDialog(c.Key("close-session-confirm"), &a.confirmCloseTab, "关闭终端会话？", "该工作区仍在连接或已连接，关闭后将断开并清除终端输出。", "取消", "关闭会话") == 1 {
+	message := "该工作区仍在连接或已连接，关闭后将断开并清除终端输出。"
+	buttons := []string{"取消", "关闭会话"}
+	if a.hasTabTransfers(a.closeTabID) {
+		message = "该会话有未完成传输。可以只关闭终端并继续传输，或取消传输后关闭。"
+		buttons = []string{"返回", "关闭终端并继续传输", "取消传输并关闭"}
+	}
+	choice := ui.AlertDialog(c.Key("close-session-confirm"), &a.confirmCloseTab, "关闭终端会话？", message, buttons...)
+	if choice > 0 {
+		if choice == 2 {
+			a.cancelTabTransfers(a.closeTabID)
+		}
 		a.removeTab(a.closeTabID)
 	}
-	if ui.AlertDialog(c.Key("quit-confirm"), &a.confirmQuit, "退出 SSHub？", "退出将断开所有终端会话。", "取消", "断开并退出") == 1 {
+	quitMessage, quitLabel := "退出将断开所有终端会话。", "断开并退出"
+	if a.hasTransfers() {
+		quitMessage, quitLabel = "还有未完成传输。退出将取消全部传输并断开终端；未完成文件不会发布为目标文件。", "取消传输并退出"
+	}
+	if ui.AlertDialog(c.Key("quit-confirm"), &a.confirmQuit, "退出 SSHub？", quitMessage, "返回", quitLabel) == 1 {
 		a.allowQuit = true
 		a.win.Close()
 	}

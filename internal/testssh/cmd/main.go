@@ -13,6 +13,7 @@ import (
 
 func main() {
 	dir := flag.String("dir", "", "isolated fixture directory")
+	delay := flag.Duration("sftp-delay", 0, "delay each fixture SFTP write for lifecycle checks")
 	flag.Parse()
 	if *dir == "" {
 		panic("missing fixture directory")
@@ -25,6 +26,7 @@ func main() {
 		panic(err)
 	}
 	defer s.Close()
+	s.WriteDelay = *delay
 	data, _ := json.Marshal(map[string]string{"address": s.Address(), "identity": s.Identity, "encrypted_identity": s.EncryptedIdentity})
 	if err := os.WriteFile(filepath.Join(*dir, "server.json"), data, 0600); err != nil {
 		panic(err)

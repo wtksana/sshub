@@ -1,6 +1,6 @@
 # SSHub 首版产品规划
 
-状态：2026-11-16 整体方案已确认，P1–P3 已完成阶段验证，P4–P6 尚未实现。已验证范围与限制见 [P2](issues/03-secure-ssh.md) 和 [P3](issues/04-workspace.md)。
+状态：2026-11-16 整体方案已确认，P1–P4 已实现并完成所列阶段验证，P5–P6 尚未实现。已验证范围与限制见 [P2](issues/03-secure-ssh.md)、[P3](issues/04-workspace.md) 和 [P4](issues/07-sftp-files.md)。
 
 ## 目标
 

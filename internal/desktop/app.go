@@ -1,8 +1,10 @@
 package desktop
 
 import (
+	"context"
 	"slices"
 	"sync/atomic"
+	"time"
 
 	"github.com/egoist/mygo"
 	"sshub/internal/connection"
@@ -48,11 +50,23 @@ type app struct {
 	forgetHost                           string
 	confirmForgetHost                    bool
 	notice                               string
+	transfers                            []*transferTask
+	nextTransfer                         int
+	transferConflict                     *fileConflict
+	fileEdit                             *fileEditor
+	transferQueue                        chan *transferTask
+	transferDone                         chan struct{}
+	workCtx                              context.Context
+	workCancel                           context.CancelFunc
 }
 
 func newApp(dir string) *app {
 	a := &app{dir: dir, leftSize: 260, contentPercent: 66, group: "全部分组", prompts: make(chan *connectionPrompt, 16), revealedTabs: map[int]int{}}
+	a.workCtx, a.workCancel = context.WithCancel(context.Background())
 	a.load()
+	a.transferQueue = make(chan *transferTask, 256)
+	a.transferDone = make(chan struct{})
+	go a.runTransfers()
 	return a
 }
 
@@ -84,11 +98,22 @@ func (a *app) close() {
 		return
 	}
 	a.flushLayout()
+	a.workCancel()
+	for _, task := range a.transfers {
+		if task.cancel != nil {
+			task.cancel()
+		}
+	}
+	close(a.transferQueue)
 	for _, tab := range a.tabs {
 		a.release(tab)
 		if tab.term != nil {
 			tab.term.Close()
 		}
+	}
+	select {
+	case <-a.transferDone:
+	case <-time.After(3 * time.Second):
 	}
 	if a.store != nil {
 		a.store.Close()

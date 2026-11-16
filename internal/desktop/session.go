@@ -12,6 +12,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"sshub/internal/connection"
 	"sshub/internal/library"
+	"sshub/internal/transfer"
 )
 
 type workspace struct {
@@ -23,6 +24,10 @@ type workspace struct {
 	attempt                 int
 	cancel                  context.CancelFunc
 	client                  *connection.Client
+	transport               *sharedTransport
+	shell                   *connection.Shell
+	files                   fileBrowser
+	retryRequests           []transfer.Request
 	term                    *terminal.Terminal
 	searchOpen, searchFocus bool
 	search, searchApplied   string
@@ -58,18 +63,29 @@ func busy(tab *workspace) bool { return tab.status == "连接中" || tab.status 
 
 func (a *app) release(tab *workspace) {
 	tab.attempt++
+	if tab.files.cancel != nil {
+		tab.files.cancel()
+		tab.files.cancel = nil
+	}
+	tab.files.loading = false
 	if tab.cancel != nil {
 		tab.cancel()
 		tab.cancel = nil
 	}
-	if tab.client != nil {
-		client := tab.client
-		tab.client = nil
-		go client.Close()
+	if tab.shell != nil {
+		shell := tab.shell
+		tab.shell = nil
+		go shell.Close()
 	}
+	if tab.transport != nil {
+		tab.transport.release()
+		tab.transport = nil
+	}
+	tab.client = nil
 }
 
 func (a *app) disconnect(tab *workspace) {
+	tab.retryRequests = nil
 	a.release(tab)
 	tab.status, tab.err = "已断开", ""
 	// Keep the emulator and its output until the user closes or reconnects.
@@ -90,7 +106,7 @@ func (a *app) removeTab(key int) {
 }
 
 func (a *app) requestClose(tab *workspace) {
-	if busy(tab) {
+	if busy(tab) || a.hasTabTransfers(tab.key) {
 		a.closeTabID, a.confirmCloseTab = tab.key, true
 		return
 	}
@@ -158,9 +174,9 @@ func (a *app) connect(tab *workspace) {
 			// Status is shown in the toolbar; an injected exit line can overwrite a partial remote line.
 			NoExitMessage: true,
 			OnExit: func(int) {
-				client.Close()
 				a.dispatch(func() {
 					if tab.attempt == attempt && tab.status == "已连接" {
+						a.release(tab)
 						tab.status = "已断开"
 					}
 				})
@@ -192,11 +208,21 @@ func (a *app) connect(tab *workspace) {
 				client.Close()
 				return
 			}
+			stop()
+			cancel()
+			tab.cancel = nil
+			tab.transport, tab.shell = newTransport(client), shell
 			tab.term, tab.client, tab.status = term, client, "已连接"
 			select {
 			case <-term.Done():
+				a.release(tab)
 				tab.status = "已断开"
 			default:
+				a.browse(tab, "")
+				for _, request := range tab.retryRequests {
+					a.enqueue(tab, request, &transferBatch{})
+				}
+				tab.retryRequests = nil
 			}
 		})
 	}()
@@ -208,6 +234,7 @@ func (a *app) connectionFailed(tab *workspace, attempt int, err error) {
 			return
 		}
 		tab.status = "连接失败"
+		tab.retryRequests = nil
 		if errors.Is(err, context.Canceled) {
 			tab.status = "已取消"
 		}

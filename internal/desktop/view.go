@@ -84,6 +84,9 @@ func (a *app) view(c *ui.Context) {
 	a.editorView(c)
 	a.captureLayout()
 	a.sessionDialogs(c)
+	if !a.confirmQuit && !a.confirmCloseTab {
+		a.fileDialogs(c)
+	}
 	a.promptView(c)
 	if ui.AlertDialog(c.Key("delete-confirm"), &a.deleting, "删除连接配置？", "将删除“"+a.deleteName+"”的已保存配置，已打开的工作区不受影响。", "取消", "删除配置") == 1 {
 		if err := a.store.Delete(a.deleteID); err != nil {

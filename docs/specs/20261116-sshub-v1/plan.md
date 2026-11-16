@@ -1,6 +1,6 @@
 # SSHub 首版实施计划
 
-状态：2026-11-16 整体方案已确认，P1–P3 已完成阶段验证，P4–P6 尚未开始。结果见 [P1](issues/01-connection-library.md)、[P2](issues/03-secure-ssh.md) 和 [P3](issues/04-workspace.md)，其中列明实测范围与兼容性限制。P3 后已按反馈完成[界面简化](issues/05-simplify-interface.md)，中间只保留标签与终端，并完成[内置标题栏](issues/06-custom-titlebar.md)。
+状态：2026-11-16 整体方案已确认，P1–P4 已实现并完成所列阶段验证，P5–P6 尚未实现。结果见 [P1](issues/01-connection-library.md)、[P2](issues/03-secure-ssh.md)、[P3](issues/04-workspace.md) 和 [P4](issues/07-sftp-files.md)，其中列明实测范围与待补验收。P3 后已按反馈完成[界面简化](issues/05-simplify-interface.md)，中间只保留标签与终端，并完成[内置标题栏](issues/06-custom-titlebar.md)。
 
 ## 开发原则
 
@@ -58,7 +58,7 @@
 
 ## 验证命令与结果记录
 
-Go 代码变更执行 `gofmt`、`go test ./...` 与 `go vet ./...`。UI 变更使用真实窗口或 MyGo 官方 automation；发行与性能使用正式构建，产品性能采样工具随后续阶段接入。
+Go 修改执行 `gofmt`，按改动规模与风险选择受影响包／用例的 test、vet 和相关 UI 验证；不默认执行全量测试、所有窗口套件或重复正式构建。生命周期、安全及公共 contract 修改覆盖相关回归，发行前再执行全量验收。UI 使用真实窗口或 MyGo 官方 automation；发行与性能使用正式构建，产品性能采样工具随后续阶段接入。
 
 验证结果随实现任务记录；未执行或无法可靠自动化的项目明确标注，不以现有原型通过的测试替代新增行为验收。
 
