@@ -1,0 +1,17 @@
+{
+  "Date": "2026-11-16T11:47:25.7959598+08:00",
+  "OS": "Microsoft Windows NT 10.0.26300.0",
+  "Processor": "Intel(R) Core(TM) Ultra X7 358H",
+  "LogicalProcessors": 16,
+  "TotalRAMGiB": 31.55,
+  "Executable": "D:\\Dev\\sshub\\build\\windows-amd64\\SSHub Prototype.exe",
+  "ExecutableSHA256": "B8532F6633A8461FA73CCA1659DA16C8944DEF653FD5B8F681EAF9014EF1D628",
+  "ExecutableMiB": 13.83203125,
+  "GhosttyMiB": 2.0732421875,
+  "Repeats": 3,
+  "DurationSeconds": 12,
+  "RatePerSession": 1000,
+  "WindowDIP": "1180x760",
+  "ScrollbackBytesPerSession": 2097152,
+  "Method": "Fresh processes, cached OS/files; not reboot-cold startup. Window visible. No shell children in idle/load. CPU core %=100 for one core. GPU memory/time not measured. First frame callback is before hardware presentation. UI build excludes layout/GPU. TerminalInput is not rendered throughput."
+}

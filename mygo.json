@@ -1,0 +1,8 @@
+{
+  "name": "SSHub",
+  "slug": "sshub",
+  "identifier": "dev.sshub.desktop",
+  "version": "0.1.0",
+  "out": "build",
+  "macos": { "minimumSystemVersion": "13.0" }
+}

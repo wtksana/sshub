@@ -1,0 +1,2 @@
+"Scenario","Run","ProcessToFirstFrameMs","MainToFirstFrameMs","WorkingSetMedianMiB","PrivateMedianMiB","CpuCoreMeanPercent","CpuMachineMeanPercent","TerminalInputMiBPerSecond","ViewBuildP95Ms","SampleCount"
+"load-8","1","232.7874","177.398","164.50390625","182.640625","38.0157695606051","2.375985597537819","0.7704966552120501","0.3905","213"
