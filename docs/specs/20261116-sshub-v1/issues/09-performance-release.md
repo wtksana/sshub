@@ -39,3 +39,5 @@ Go 全仓 test／vet 已通过；新增目标绑定测试后仅补该用例及 d
 继续补齐[Linux OpenSSH／Unix 权限／top](../../../verification/20261116-linux-openssh.md)：官方 Alpine 镜像 SHA512 核对后，通过仓库内便携 QEMU snapshot 和受限回环网络运行；OpenSSH 10.2p1 真实指纹／私钥、PTY、SFTP 中文目录、640→600 权限及 stat 核对通过，BusyBox top 截图已视觉检查，退出后 shell 继续响应。新增可复现 fixture 启停及产品专项脚本；从全新 snapshot 再验一次通过，全部进程已清理，未更改宿主服务。仅相关专项与脚本语法／diff 检查。剩余系统拖放、系统 Agent、重启冷启动及干净 Windows 机器证据，任务保持 claimed。
 
 补齐[便携包复测入口](../../../verification/20261116-portable-runtime.md)：独立运行校验脚本随包分发，实际 Windows PowerShell 5.1 验证文件哈希、隔离启动／退出、更换目录保留数据通过，篡改 DLL 在启动前拒绝。候选 ZIP 更新为 `build/releases/20261116-222601/SSHub-0.1.0-windows-amd64.zip`，SHA256 `b91cdf11c1737a876a5874095389c9f72d94bcab265abf62c29ac333b09c2605`，EXE 与已有正式性能样本一致。新增[剩余人工／环境验收步骤](../../../verification/remaining-acceptance.md)和文件／文件夹拖入的内容核对脚本；仅校验器正反路径通过，不冒充系统拖放成功。当前系统 Agent 为 Stopped／Disabled，未改变服务或重启电脑；干净 Windows、冷启动及系统拖放仍待证据。
+
+已准备真实系统 Agent 窗口专项脚本，要求服务已启动，不自行变更服务；临时密钥单独添加／移除，并核对原有身份集合。语法与“服务停止时在副作用前拒绝”路径通过，成功路径尚未执行；临时启用 Disabled／Stopped 服务的用户确认仍待回复。没有将此准备工作标为系统 Agent 验收通过。
