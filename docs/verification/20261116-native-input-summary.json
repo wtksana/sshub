@@ -1,0 +1,7 @@
+{
+  "scenario": "Real keyboard n i h a o -> IME candidate ni hao -> space commits 你好 -> SSH echo -> search one match",
+  "passed": true,
+  "inputMethodProfile": "0804:{86598FB9-66A2-463E-B9C2-AEB906D477AD}{607FDF85-FCC8-4DBD-A365-41296F980C9C}",
+  "outputSearchMatches": 1,
+  "literalTextInjection": false
+}

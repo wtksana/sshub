@@ -1,0 +1,9 @@
+{
+  "trials": 3,
+  "at": "2026-11-16T22:03:16.9677373+08:00",
+  "mean_observed_response_ms": 486.6176666666667,
+  "exe_sha256": "F3AB848F26FDC913DAC6E4B3B35770FA41A4E266CEBE66E0966F6DC43708D0D0",
+  "max_observed_response_ms": 526.6022,
+  "note": "Conservative process-launch to screenshot observation completion; includes native keyboard automation and capture overhead. Requires visual confirmation of sidebar hidden by Ctrl+B. Cached process starts, not reboot cold start or hardware presentation latency.",
+  "profiles": 100
+}

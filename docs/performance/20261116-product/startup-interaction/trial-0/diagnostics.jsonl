@@ -1,0 +1,17 @@
+{"at":"2026-11-16T22:02:08.9745832+08:00","ready_at":"0001-01-01T00:00:00Z","connected":0,"received_bytes":[],"heap_bytes":1358216,"goroutines":4}
+{"at":"2026-11-16T22:02:09.142857+08:00","ready_at":"2026-11-16T22:02:09.142857+08:00","connected":0,"received_bytes":[],"heap_bytes":3621448,"goroutines":4}
+{"at":"2026-11-16T22:02:10.2132047+08:00","ready_at":"2026-11-16T22:02:09.142857+08:00","connected":0,"received_bytes":[],"heap_bytes":4418952,"goroutines":4}
+{"at":"2026-11-16T22:02:11.2139974+08:00","ready_at":"2026-11-16T22:02:09.142857+08:00","connected":0,"received_bytes":[],"heap_bytes":4555696,"goroutines":4}
+{"at":"2026-11-16T22:02:12.2143968+08:00","ready_at":"2026-11-16T22:02:09.142857+08:00","connected":0,"received_bytes":[],"heap_bytes":4650280,"goroutines":4}
+{"at":"2026-11-16T22:02:13.2146575+08:00","ready_at":"2026-11-16T22:02:09.142857+08:00","connected":0,"received_bytes":[],"heap_bytes":4744872,"goroutines":4}
+{"at":"2026-11-16T22:02:14.2151069+08:00","ready_at":"2026-11-16T22:02:09.142857+08:00","connected":0,"received_bytes":[],"heap_bytes":4800296,"goroutines":4}
+{"at":"2026-11-16T22:02:15.2155687+08:00","ready_at":"2026-11-16T22:02:09.142857+08:00","connected":0,"received_bytes":[],"heap_bytes":4853968,"goroutines":4}
+{"at":"2026-11-16T22:02:16.2156525+08:00","ready_at":"2026-11-16T22:02:09.142857+08:00","connected":0,"received_bytes":[],"heap_bytes":4907928,"goroutines":4}
+{"at":"2026-11-16T22:02:17.2157404+08:00","ready_at":"2026-11-16T22:02:09.142857+08:00","connected":0,"received_bytes":[],"heap_bytes":4961696,"goroutines":4}
+{"at":"2026-11-16T22:02:18.2162963+08:00","ready_at":"2026-11-16T22:02:09.142857+08:00","connected":0,"received_bytes":[],"heap_bytes":2722112,"goroutines":4}
+{"at":"2026-11-16T22:02:19.2168966+08:00","ready_at":"2026-11-16T22:02:09.142857+08:00","connected":0,"received_bytes":[],"heap_bytes":2865464,"goroutines":4}
+{"at":"2026-11-16T22:02:20.2172658+08:00","ready_at":"2026-11-16T22:02:09.142857+08:00","connected":0,"received_bytes":[],"heap_bytes":2939944,"goroutines":4}
+{"at":"2026-11-16T22:02:21.2178475+08:00","ready_at":"2026-11-16T22:02:09.142857+08:00","connected":0,"received_bytes":[],"heap_bytes":3055912,"goroutines":4}
+{"at":"2026-11-16T22:02:22.2182008+08:00","ready_at":"2026-11-16T22:02:09.142857+08:00","connected":0,"received_bytes":[],"heap_bytes":3150888,"goroutines":4}
+{"at":"2026-11-16T22:02:23.2188919+08:00","ready_at":"2026-11-16T22:02:09.142857+08:00","connected":0,"received_bytes":[],"heap_bytes":3286384,"goroutines":4}
+{"at":"2026-11-16T22:02:24.2194238+08:00","ready_at":"2026-11-16T22:02:09.142857+08:00","connected":0,"received_bytes":[],"heap_bytes":3423344,"goroutines":4}
