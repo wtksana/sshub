@@ -11,7 +11,7 @@
 | Q5／Q10 简洁布局 | 简化界面、内置标题栏专项；中间标签／终端，队列在右侧 | 已验证；功能操作收进菜单／右键 |
 | Q6 认证与单层跳板 | connection 认证／取消／跳板测试；SSH 窗口专项 | 密码、私钥、加密私钥、命名管道 Agent 通过；真实系统 OpenSSH Agent 服务仍未实测 |
 | Q7 文件管理与传输 | connection 千条目录及管理；transfer 递归往返／错误；SFTP 窗口专项与真实系统选择器；2,000 条虚拟列表首尾滚动；跨服务器上传专项 | 管理、递归、权限协议、覆盖、取消、重试通过；切到 B 并关闭 A 终端后，活动／排队上传仍完整落在 A 原目录，SHA256 一致；系统拖放待补 |
-| Q8 标签、分屏、终端工具 | workspace 八会话／焦点／搜索／字号／重连专项；Windows 剪贴板中文空格往返 | 粘贴、搜索、全选、Ctrl+Insert 与原生右键复制内容校验通过；输入法组合、vim/top 兼容待补 |
+| Q8 标签、分屏、终端工具 | workspace 八会话／焦点／搜索／字号／重连专项；Windows 剪贴板中文空格往返；真实 Windows OpenSSH／Vim 专项 | 粘贴、搜索、全选、复制通过；Vim 显示、中文编辑、保存及退出后 shell 恢复通过；输入法组合与 Linux top 待补 |
 | Q9 主题与字体 | settings 专项；在线终端改变主题／字体后中文收发；Windows 设置浅→深→浅实时切换 | 浅深色、持久化和跟随系统实时更新通过；同一进程在线中文收发正常，系统模式已恢复 |
 | Q11 生命周期与恢复 | desktop／workspace 行为测试；workspace／SSH／SFTP 窗口专项 | 待连接恢复、断线输出、在线关闭／退出确认、关闭终端保留任务通过 |
 | Q12 迁移与凭据隔离 | library migration 严格解码／原子失败／新 ID；settings 窗口导入导出及冲突；原生保存／打开对话框选择中文空格路径 | 已验证导出三配置，再从原生选择器选取、预览并取消导入，原配置保留 |
@@ -38,3 +38,5 @@
 本轮已完成全仓 `go test -tags mygo_nowebview ./...`、同标签 `go vet ./...`；新增目标绑定测试之后仅补跑该测试及 desktop vet，通过。SFTP 2,000 条目录及文件管理专项在 `artifacts/sftp-ui/20261116-211410/`，设置／迁移全流程及原生选择器专项在 `artifacts/settings-ui/20261116-211628/`，发行隔离验证在 `artifacts/release-package/20261116-211407/`。性能与时间序列见[正式报告](../../performance/20261116-product.md)。正式负载使用隔离回环服务器，未操作用户服务器或修改用户系统设置。缺少真实 OpenSSH／Unix 权限、系统输入法及重启冷启动证据时，首版整体验收保持进行中。
 
 后续原生集成专项见[验证记录](../../verification/20261116-native-integration.md)，原始产物为 `artifacts/integration-ui/20261116-212807/`：补齐跨服务器上传焦点／关闭来源终端、Windows 剪贴板往返和系统主题实时切换。该次短暂切换 Windows 外观后已恢复原浅色模式，测试应用及临时服务器均正常退出。仅增加验证脚本和文档，未重跑正式十分钟性能或全仓 Go 测试。
+
+真实 [Windows OpenSSH／Vim 专项](../../verification/20261116-openssh.md) 在 `artifacts/openssh-ui/20261116-214817/`：便携 OpenSSH 10.4p1 Preview 的产品指纹核对、私钥认证、PTY shell、SFTP 中文文件列表／新建目录通过；真实 Vim 9.2 的中文编辑、文件内容核对和退出后 shell 恢复通过。测试未安装服务，系统 ssh-agent 保持停止。Linux OpenSSH／Unix 权限、Linux top、系统输入法组合、系统拖放及启动可操作计时仍待补，不将本机 Windows 兼容性扩展为所有平台结论。

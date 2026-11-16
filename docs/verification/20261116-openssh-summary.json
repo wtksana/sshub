@@ -1,0 +1,14 @@
+{
+  "shellEchoVerified": true,
+  "systemServiceInstalled": false,
+  "serverExecutableSHA256": "00D61610A0965B42CC9A9CD401DAE8983FE77D5394697F074D776BB68CE6FF0A",
+  "passed": true,
+  "hostFingerprintMatched": true,
+  "sftpMkdir": true,
+  "vimSavedFileSHA256": "978551FD76C6FAB176DDEBC59141FC497EBE0651B64027C5B0FBA6941CECB6DC",
+  "shellRecoveredAfterVim": true,
+  "vimUnicodeFileSaved": true,
+  "serverVersion": "OpenSSH_for_Windows_10.4p1 Win32-OpenSSH-GitHub, LibreSSL 4.3.3",
+  "vimExecutableSHA256": "93EA9D2335D47DCEE347286F05E76CAA3954C6A4C7F3DAC0B15C9FEFC6EE1874",
+  "vimVersion": "VIM - Vi IMproved 9.2 (2026 Feb 14, compiled Aug 04 2026 08:42:00)"
+}

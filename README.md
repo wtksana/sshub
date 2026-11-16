@@ -96,7 +96,9 @@ Go 测试覆盖配置持久化、100 条连接筛选、双实例锁、外部修�
 
 `verify-integration-ui.ps1 -NativeActions` 在交互终端验证真实多选上传：任务运行时切到另一服务器、关闭来源终端，核对活动及排队文件仍落原服务器原目录、内容哈希一致。第二次暂停期间，可运行 `verify-terminal-clipboard.ps1` 或其 `-NativeCopy` 模式，验证中文空格经 Windows 剪贴板粘贴、SSH 回显、搜索和复制后的完整内容。Windows 设置浅→深→浅实时切换也已实测通过，具体步骤、脚本复用及局限见[原生集成专项](docs/verification/20261116-native-integration.md)。
 
-当前仍缺中文输入法组合输入、系统拖放、vim/top 等交互程序、真实 OpenSSH／Unix 权限及启动可操作端到端证据；完整状态见[首版验收记录](docs/specs/20261116-sshub-v1/acceptance.md)。
+`verify-openssh-ui.ps1 -OpenSSHDirectory <OpenSSH-Win64目录>` 使用临时密钥、独立配置及回环高端口运行真实便携 OpenSSH，不安装系统服务。已验证产品主机指纹核对、私钥认证、Windows PTY shell、SFTP 浏览／新建目录，以及真实 Vim 中文编辑、保存和退出恢复；组件版本与复现步骤见[OpenSSH／Vim 专项](docs/verification/20261116-openssh.md)。
+
+当前仍缺中文输入法组合输入、系统拖放、Linux OpenSSH／Unix 权限／top、系统 Agent 服务及启动可操作端到端证据；完整状态见[首版验收记录](docs/specs/20261116-sshub-v1/acceptance.md)。
 
 调试验证后可重新运行 `./scripts/build.ps1` 生成正式构建。如果当前程序占用默认构建目录，可用 `./scripts/build.ps1 -OutputDirectory build/titlebar` 生成到独立目录；验证脚本对应使用 `-BuildDirectory build/titlebar`。构建脚本只对当前进程设置 Go 备用源，结束后恢复环境；可通过 `-Proxy` 指定来源。
 
