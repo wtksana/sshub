@@ -59,6 +59,12 @@
 
 应用仅保留正式入口和 `-data-dir` 参数。
 
+便携 ZIP、第三方许可及校验和由 `./scripts/package.ps1` 生成，输出在 `build/releases/`。解压使用及手动升级说明见 [便携使用说明](docs/portable-readme.md)。首版逐项验收进展见 [验收记录](docs/specs/20261116-sshub-v1/acceptance.md)；仍有待补实测项时，不视为首版验收完成。
+
+正式性能采样使用 `measure-startup.ps1`（10 次缓存首帧显示）及 `measure-product.ps1 -Sessions 1`／`-Sessions 8 -Seconds 600`。这两个脚本要求 PowerShell 7.5+，使用独立数据、回环 SSH 服务和显式启用的无文本诊断；恢复标签需通过真实 UI 手动连接。原始数据在 `artifacts/`，可复核报告保存在 `docs/performance/`。不将首帧时间当作端到端交互延迟，也不将接收速率当作渲染吞吐。
+
+`verify-release.ps1 -Archive <ZIP> -PreviousExecutable <旧版EXE>` 解压并校验每个文件，使用仅含 Windows 路径的子进程 PATH 和隔离 APPDATA 验证启动、正常退出及替换程序后配置／布局保留；不修改当前用户环境，也不等同于全新虚拟机验收。
+
 ## 验证
 
 按改动范围选择受影响包和对应窗口检查；以下为可选验证入口，不要求每次全部运行：

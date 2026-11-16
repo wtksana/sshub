@@ -1,4 +1,4 @@
-param([switch]$SkipBuild, [string]$BuildDirectory = 'build/p4', [switch]$TransferPickers)
+param([switch]$SkipBuild, [string]$BuildDirectory = 'build/p4', [switch]$TransferPickers, [switch]$LargeDirectory)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 . "$PSScriptRoot/ui-helpers.ps1"
@@ -47,6 +47,11 @@ try {
     $server = Get-Content -Raw (Join-Path $fixtureDir 'server.json') | ConvertFrom-Json
     $remoteRoot = Join-Path $fixtureDir 'files'
     'Remote 中文' | Set-Content -Encoding utf8 (Join-Path $remoteRoot '远程.txt')
+    if ($LargeDirectory) {
+        $largeDir = Join-Path $remoteRoot 'large'
+        New-Item -ItemType Directory $largeDir | Out-Null
+        foreach ($i in 0..1999) { [IO.File]::WriteAllText((Join-Path $largeDir ('entry-{0:d4}.txt' -f $i)), 'large directory entry') }
+    }
     @{version=1;profiles=@(@{id='sftp';name='本地 SFTP';host='127.0.0.1';port=[int]($server.address.Split(':')[-1]);username='test';auth='private_key';identity_path=$server.identity;favorite=$false})} |
         ConvertTo-Json -Depth 5 | Set-Content -Encoding utf8 (Join-Path $dataDir 'connections.json')
     $start = [Diagnostics.ProcessStartInfo]::new()
@@ -89,6 +94,18 @@ try {
     UI fill key=file-edit-value '600' --settle | Out-Null
     UI press key=file-edit-confirm --settle | Out-Null
     Wait-Text '远程.txt'
+    if ($LargeDirectory) {
+        UI fill "key=$pathKey" '/large' --settle | Out-Null
+        UI key Enter --settle | Out-Null
+        Wait-Text 'entry-0000.txt'
+        $snapshot = Snapshot
+        if ([regex]::Matches($snapshot, 'key=remote-entry-').Count -ge 100) { throw 'Remote list built excessive rows' }
+        UI wheel key=remote-files 0 100000 --settle | Out-Null
+        Wait-Text 'entry-1999.txt'
+        UI screenshot (Join-Path $directory 'large-directory.png') | Out-Null
+        File-Menu files-home
+        Wait-Text '远程.txt'
+    }
     Entry-Menu '重命名目录/' file-delete
     UI press key=file-edit-cancel --settle | Out-Null
     if (!(Test-Path (Join-Path $remoteRoot '重命名目录'))) { throw 'Cancel deleted directory' }

@@ -1,0 +1,72 @@
+[
+  {
+    "minute": 1,
+    "samples": 59,
+    "mean_working_set_mib": 172.55481991525423,
+    "max_working_set_mib": 175.984375,
+    "mean_private_mib": 179.15651483050848
+  },
+  {
+    "minute": 2,
+    "samples": 59,
+    "mean_working_set_mib": 176.31230137711864,
+    "max_working_set_mib": 176.46875,
+    "mean_private_mib": 182.48536811440678
+  },
+  {
+    "minute": 3,
+    "samples": 59,
+    "mean_working_set_mib": 177.08540783898306,
+    "max_working_set_mib": 178.1875,
+    "mean_private_mib": 182.8494438559322
+  },
+  {
+    "minute": 4,
+    "samples": 59,
+    "mean_working_set_mib": 181.96669756355934,
+    "max_working_set_mib": 185.02734375,
+    "mean_private_mib": 187.3174655720339
+  },
+  {
+    "minute": 5,
+    "samples": 59,
+    "mean_working_set_mib": 185.05243644067798,
+    "max_working_set_mib": 185.08984375,
+    "mean_private_mib": 190.2691340042373
+  },
+  {
+    "minute": 6,
+    "samples": 59,
+    "mean_working_set_mib": 186.58752648305085,
+    "max_working_set_mib": 186.78515625,
+    "mean_private_mib": 193.12950211864407
+  },
+  {
+    "minute": 7,
+    "samples": 59,
+    "mean_working_set_mib": 186.7880031779661,
+    "max_working_set_mib": 187.08984375,
+    "mean_private_mib": 193.4676906779661
+  },
+  {
+    "minute": 8,
+    "samples": 59,
+    "mean_working_set_mib": 187.23430879237287,
+    "max_working_set_mib": 187.3046875,
+    "mean_private_mib": 193.86169226694915
+  },
+  {
+    "minute": 9,
+    "samples": 59,
+    "mean_working_set_mib": 187.27356991525423,
+    "max_working_set_mib": 187.3125,
+    "mean_private_mib": 193.85679290254237
+  },
+  {
+    "minute": 10,
+    "samples": 60,
+    "mean_working_set_mib": 187.198828125,
+    "max_working_set_mib": 187.28125,
+    "mean_private_mib": 193.8701171875
+  }
+]

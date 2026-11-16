@@ -8,6 +8,10 @@ import (
 )
 
 func (a *app) view(c *ui.Context) {
+	if a.diagnostics != nil {
+		a.sampleDiagnostics()
+		c.After(time.Second)
+	}
 	a.focusedTerminal = 0
 	t := *c.Theme()
 	switch a.preferences.Theme {

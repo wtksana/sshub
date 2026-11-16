@@ -1,0 +1,24 @@
+{
+  "font": "Cascadia Mono 13",
+  "os": {
+    "Caption": "Microsoft Windows 11 家庭版 中文版",
+    "Version": "10.0.26300",
+    "TotalVisibleMemorySize": 33079836
+  },
+  "commit": "4c47f748cc8dc3c486ab7940b03a117ba94fbc1f",
+  "lines_per_second_per_session": 1000,
+  "sessions": 1,
+  "seconds": 600,
+  "window_dip": "1280x800",
+  "cpu": {
+    "Name": "Intel(R) Core(TM) Ultra X7 358H",
+    "NumberOfLogicalProcessors": 16
+  },
+  "at": "2026-11-16T20:58:19.8344511+08:00",
+  "line_bytes": 101,
+  "go": "go version go1.27.4 windows/amd64",
+  "dll_sha256": "53E8E2DD979702E8F2C48107AF19BE5A76EFC2E88EB7CF1097218E899665DA41",
+  "visible_panes": 1,
+  "exe_sha256": "F3AB848F26FDC913DAC6E4B3B35770FA41A4E266CEBE66E0966F6DC43708D0D0",
+  "scrollback_bytes": 2097152
+}

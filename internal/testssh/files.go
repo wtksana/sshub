@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/pkg/sftp"
@@ -15,6 +16,7 @@ import (
 type rootedFiles struct {
 	root  *os.Root
 	delay time.Duration
+	limit int64
 }
 
 func fixturePath(name string) (string, error) {
@@ -58,15 +60,19 @@ func (f *rootedFiles) Filewrite(r *sftp.Request) (io.WriterAt, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &fixtureWriter{File: file, delay: f.delay}, nil
+	return &fixtureWriter{File: file, delay: f.delay, limit: f.limit}, nil
 }
 
 type fixtureWriter struct {
 	*os.File
 	delay time.Duration
+	limit int64
 }
 
 func (f *fixtureWriter) WriteAt(p []byte, off int64) (int, error) {
+	if f.limit > 0 && off+int64(len(p)) > f.limit {
+		return 0, syscall.ENOSPC
+	}
 	if f.delay > 0 {
 		time.Sleep(f.delay)
 	}

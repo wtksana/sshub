@@ -111,6 +111,29 @@ func TestDirectoryRoundTripAndConflictDecisions(t *testing.T) {
 	check(t, filepath.Join(s.Root, "中文 文件夹", "另存.txt"), "second")
 }
 
+func TestRemoteDiskFullPreservesDestinationAndCleansPartial(t *testing.T) {
+	s, c := fixture(t)
+	s.WriteLimit = 64 << 10
+	src := filepath.Join(t.TempDir(), "large.txt")
+	write(t, src, strings.Repeat("x", 256<<10))
+	dest := filepath.Join(s.Root, "original.txt")
+	write(t, dest, "original")
+	p, err := run(t, c, transfer.Request{Upload: true, Source: src, Destination: "/original.txt", Conflict: func(context.Context, string) (transfer.Decision, error) {
+		return transfer.Decision{Choice: transfer.Overwrite}, nil
+	}})
+	if err == nil || p.Files != 0 {
+		t.Fatal("disk full reported success", p, err)
+	}
+	check(t, dest, "original")
+	entries, err := os.ReadDir(s.Root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 1 || entries[0].Name() != "original.txt" {
+		t.Fatal("failed upload left partial files", entries)
+	}
+}
+
 func TestCancelPreservesDestinationAndRetryStartsFromZero(t *testing.T) {
 	s, c := fixture(t)
 	src := filepath.Join(t.TempDir(), "large.bin")

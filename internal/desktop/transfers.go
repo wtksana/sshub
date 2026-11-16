@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"path"
 	"path/filepath"
+	"slices"
 	"time"
 
 	"sshub/internal/library"
@@ -27,6 +28,26 @@ type transferTask struct {
 	jump        *library.Profile
 }
 type transferBatch struct{ policy transfer.Choice }
+
+const transferHistoryLimit = 256
+
+func (a *app) pruneTransferHistory() {
+	ended := 0
+	for _, task := range a.transfers {
+		if task.cancel == nil {
+			ended++
+		}
+	}
+	remove := max(0, ended-transferHistoryLimit)
+	a.transfers = slices.DeleteFunc(a.transfers, func(task *transferTask) bool {
+		if remove > 0 && task.cancel == nil {
+			remove--
+			return true
+		}
+		return false
+	})
+}
+
 type fileConflict struct {
 	ctx                context.Context
 	server, path, name string
@@ -180,6 +201,7 @@ func (a *app) runTransfer(task *transferTask) {
 		if tab := a.workspaceByID(task.tabID); tab != nil && tab.client != nil {
 			a.browse(tab, tab.files.path)
 		}
+		a.pruneTransferHistory()
 	})
 }
 

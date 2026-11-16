@@ -1,12 +1,15 @@
 package desktop
 
 import (
+	"time"
+
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
 )
 
 func Run(dir string) error {
 	a := newApp(dir)
+	a.diagnostics = openDiagnostics()
 	defer a.close()
 	mygo.App.WhenReady(func() {
 		width, height := 1280, 800
@@ -27,7 +30,14 @@ func Run(dir string) error {
 			}
 		}
 		w.OnResize(rememberSize)
-		w.OnReadyToShow(w.Show)
+		w.OnReadyToShow(func() {
+			w.Show()
+			if a.diagnostics != nil {
+				a.diagnostics.ready = time.Now()
+				a.diagnostics.last = time.Time{}
+				a.sampleDiagnostics()
+			}
+		})
 		w.OnClose(func(e *mygo.CloseEvent) {
 			rememberSize()
 			if !a.allowQuit {

@@ -1,0 +1,17 @@
+{
+  "did_not_measure": [
+    "Hardware frame timing",
+    "Rendered line throughput",
+    "IME composition",
+    "Network wide-area latency"
+  ],
+  "observations": [
+    "Four visible panes keep painting ANSI + UTF-8 output",
+    "Search input 性能服务器-099 gives 1 / 100 条连接 during load",
+    "Selecting background tab 性能服务器-000 updates file panel server label",
+    "Dragging central vertical divider from x625 to x710 resizes and reflows output",
+    "Process module inventory loads ghostty-vt.dll from executable directory"
+  ],
+  "method": "Real release window driven with @oai/sky; observations are functional, not input-to-display latency",
+  "checked_between": "2026-11-16T21:05:00+08:00/2026-11-16T21:09:00+08:00"
+}

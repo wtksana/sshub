@@ -1,0 +1,9 @@
+{
+  "mean_show_ms": 294.6286,
+  "exe_sha256": "F3AB848F26FDC913DAC6E4B3B35770FA41A4E266CEBE66E0966F6DC43708D0D0",
+  "exe": "D:\\Dev\\sshub\\build\\windows-amd64\\SSHub.exe",
+  "max_show_ms": 320.8213,
+  "trials": 10,
+  "note": "System caches retained; process launch to ready-to-show after first frame; not reboot cold start or hardware presentation latency",
+  "at": "2026-11-16T20:58:11.1255500+08:00"
+}

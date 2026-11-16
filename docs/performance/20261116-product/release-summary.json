@@ -1,0 +1,40 @@
+{
+  "runs": [
+    {
+      "label": "previous",
+      "exe": "D:\\Dev\\sshub\\artifacts\\release-package\\20261116-211407\\previous-program\\SSHub.exe",
+      "exe_sha256": "DC13B5190923FA803C505DF2E8D1DFA003FD4CAF0CE1C6DD7D998B1BCBB8E1B5",
+      "clean_exit": true,
+      "configuration_preserved": true,
+      "layout_preserved": true,
+      "child_path": "C:\\Windows\\System32;C:\\Windows",
+      "appdata": "D:\\Dev\\sshub\\artifacts\\release-package\\20261116-211407\\roaming",
+      "connected": null
+    },
+    {
+      "label": "extracted",
+      "exe": "D:\\Dev\\sshub\\artifacts\\release-package\\20261116-211407\\unpacked\\SSHub-0.1.0-windows-amd64\\SSHub.exe",
+      "exe_sha256": "F3AB848F26FDC913DAC6E4B3B35770FA41A4E266CEBE66E0966F6DC43708D0D0",
+      "clean_exit": true,
+      "configuration_preserved": true,
+      "layout_preserved": true,
+      "child_path": "C:\\Windows\\System32;C:\\Windows",
+      "appdata": "D:\\Dev\\sshub\\artifacts\\release-package\\20261116-211407\\roaming",
+      "connected": 0
+    },
+    {
+      "label": "replaced-directory",
+      "exe": "D:\\Dev\\sshub\\artifacts\\release-package\\20261116-211407\\replacement-program\\SSHub.exe",
+      "exe_sha256": "F3AB848F26FDC913DAC6E4B3B35770FA41A4E266CEBE66E0966F6DC43708D0D0",
+      "clean_exit": true,
+      "configuration_preserved": true,
+      "layout_preserved": true,
+      "child_path": "C:\\Windows\\System32;C:\\Windows",
+      "appdata": "D:\\Dev\\sshub\\artifacts\\release-package\\20261116-211407\\roaming",
+      "connected": 0
+    }
+  ],
+  "archive": "D:\\Dev\\sshub\\build\\releases\\20261116-211354\\SSHub-0.1.0-windows-amd64.zip",
+  "limitation": "Child PATH excludes development tools; Windows, fonts and user profile remain on the development machine. Not a clean VM.",
+  "archive_sha256": "94956A6D5AF750E0BA3F58DC0C6087150D450640B3E517024CE3169951A245F1"
+}

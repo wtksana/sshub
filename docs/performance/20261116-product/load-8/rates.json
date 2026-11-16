@@ -1,0 +1,14 @@
+{
+  "diagnostic_interval_seconds": 599.282748,
+  "received_lines_per_second": [
+    999.9954145184237,
+    999.9954145184237,
+    999.9954145184237,
+    999.9954145184237,
+    999.9954145184237,
+    999.9954145184237,
+    999.9954145184237,
+    999.9954145184237
+  ],
+  "meaning": "SSH read bytes divided by fixed 101 bytes per generated logical line; not rendered throughput"
+}

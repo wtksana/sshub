@@ -1,4 +1,4 @@
-param([switch]$SkipBuild, [string]$BuildDirectory = 'build/p5')
+param([switch]$SkipBuild, [string]$BuildDirectory = 'build/p5', [switch]$NativePickers)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 . "$PSScriptRoot/ui-helpers.ps1"
@@ -170,6 +170,15 @@ try {
     Assert-WorkspaceCount 1 2
     Assert-Text 'test@new.example.com · 字号 16'
     if ((Read-Config).preferences.theme -ne 'light') { throw 'Imported preference lost on restart' }
+    if ($NativePickers) {
+        @{directory=$directory;socket=$socket;session=$env:MYGO_AUTOMATION_SESSION;export=(Join-Path $directory '原生选择器 导出.json')} |
+            ConvertTo-Json | Set-Content -Encoding utf8 (Join-Path $root 'artifacts/settings-ui/active.json')
+        Write-Host "Drive export and import native pickers, cancel the import preview, then resume: $directory"
+        Read-Host 'Native picker checks' | Out-Null
+        $picked = Get-Content -Raw (Join-Path $directory '原生选择器 导出.json') | ConvertFrom-Json
+        if ($picked.format -ne 'sshub' -or $picked.profiles.Count -ne 3) { throw 'Native picker export invalid' }
+        if ((Read-Config).profiles.Count -ne 3) { throw 'Canceled picker import changed configuration' }
+    }
     Stop-App
     Write-Host "Settings and migration UI checks passed: $directory"
 } catch {

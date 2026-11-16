@@ -124,28 +124,28 @@ func (a *app) files(c *ui.Context) {
 			if tab.files.err != "" {
 				ui.Text(c.Key("files-error"), tab.files.err).TextColor(t.Danger).FontSize(12).Wrap()
 			}
-			zone := ui.Scroll(c.Key("remote-files")).Grow(1).FillWidth().Gap(2).ContextMenu(func(m *ui.Menu) { a.directoryMenu(m, tab) }).Children(func() {
-				if tab.files.path != "" {
-					ui.Button(c.Key("remote-parent"), "../").FillWidth().OnClick(func() { a.browse(tab, path.Dir(tab.files.path)) })
+			if tab.files.path != "" {
+				ui.Button(c.Key("remote-parent"), "../").FillWidth().OnClick(func() { a.browse(tab, path.Dir(tab.files.path)) })
+			}
+			zone := ui.List(c.Key("remote-files"), nil, len(tab.files.entries), func(i int) {
+				entry := tab.files.entries[i]
+				name := entry.Name()
+				if !connection.ValidName(name) {
+					return
 				}
-				for i, entry := range tab.files.entries {
-					name := entry.Name()
-					if !connection.ValidName(name) {
-						continue
-					}
-					label := name
-					if entry.IsDir() {
-						label += "/"
-					}
-					if entry.Mode()&os.ModeSymlink != 0 {
-						label += " ↗"
-					}
-					target := path.Join(tab.files.path, name)
-					row := ui.Button(c.Key(fmt.Sprintf("remote-entry-%d", i)), label).FillWidth().Tooltip(entry.Mode().String() + " · " + bytesText(entry.Size())).ContextMenu(func(m *ui.Menu) { a.entryMenu(m, tab, target, entry) })
-					if row.DoubleClicked() && entry.IsDir() {
-						a.browse(tab, target)
-					}
+				label := name
+				if entry.IsDir() {
+					label += "/"
 				}
+				if entry.Mode()&os.ModeSymlink != 0 {
+					label += " ↗"
+				}
+				target := path.Join(tab.files.path, name)
+				row := ui.Button(c.Key(fmt.Sprintf("remote-entry-%d", i)), label).FillWidth().Tooltip(entry.Mode().String() + " · " + bytesText(entry.Size())).ContextMenu(func(m *ui.Menu) { a.entryMenu(m, tab, target, entry) })
+				if row.DoubleClicked() && entry.IsDir() {
+					a.browse(tab, target)
+				}
+			}).Grow(1).FillWidth().ContextMenu(func(m *ui.Menu) { a.directoryMenu(m, tab) }).Children(func() {
 				if !tab.files.loading && tab.files.err == "" && len(tab.files.entries) == 0 {
 					ui.Text(c, "空目录").TextColor(t.TextMuted)
 				}

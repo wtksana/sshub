@@ -15,6 +15,7 @@ import (
 type app struct {
 	dir                                  string
 	store                                *library.Store
+	diagnostics                          *diagnostics
 	preferences                          library.Preferences
 	settings                             *settingsEditor
 	migration                            *migrationEditor
@@ -121,6 +122,10 @@ func (a *app) close() {
 	}
 	if a.store != nil {
 		a.store.Close()
+	}
+	if a.diagnostics != nil {
+		close(a.diagnostics.queue)
+		<-a.diagnostics.done
 	}
 }
 

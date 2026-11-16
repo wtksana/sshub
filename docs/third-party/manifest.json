@@ -1,0 +1,68 @@
+[
+  {
+    "module": "github.com/Microsoft/go-winio",
+    "version": "v0.6.2",
+    "source": "https://github.com/Microsoft/go-winio",
+    "license_file": "github.com_Microsoft_go-winio-LICENSE.txt"
+  },
+  {
+    "module": "github.com/ebitengine/purego",
+    "version": "v0.11.1",
+    "source": "https://github.com/ebitengine/purego",
+    "license_file": "github.com_ebitengine_purego-LICENSE.txt"
+  },
+  {
+    "module": "github.com/egoist/mygo",
+    "version": "v0.9.1",
+    "source": "https://github.com/egoist/mygo",
+    "license_file": "github.com_egoist_mygo-LICENSE.txt"
+  },
+  {
+    "module": "github.com/go-text/typesetting",
+    "version": "v0.3.5",
+    "source": "https://github.com/go-text/typesetting",
+    "license_file": "github.com_go-text_typesetting-LICENSE.txt"
+  },
+  {
+    "module": "github.com/kr/fs",
+    "version": "v0.1.0",
+    "source": "https://github.com/kr/fs",
+    "license_file": "github.com_kr_fs-LICENSE.txt"
+  },
+  {
+    "module": "github.com/pkg/sftp",
+    "version": "v1.13.10",
+    "source": "https://github.com/pkg/sftp",
+    "license_file": "github.com_pkg_sftp-LICENSE.txt"
+  },
+  {
+    "module": "golang.org/x/crypto",
+    "version": "v0.57.0",
+    "source": "https://pkg.go.dev/golang.org/x/crypto@v0.57.0",
+    "license_file": "golang.org_x_crypto-LICENSE.txt"
+  },
+  {
+    "module": "golang.org/x/image",
+    "version": "v0.46.0",
+    "source": "https://pkg.go.dev/golang.org/x/image@v0.46.0",
+    "license_file": "golang.org_x_image-LICENSE.txt"
+  },
+  {
+    "module": "golang.org/x/net",
+    "version": "v0.59.0",
+    "source": "https://pkg.go.dev/golang.org/x/net@v0.59.0",
+    "license_file": "golang.org_x_net-LICENSE.txt"
+  },
+  {
+    "module": "golang.org/x/sys",
+    "version": "v0.48.0",
+    "source": "https://pkg.go.dev/golang.org/x/sys@v0.48.0",
+    "license_file": "golang.org_x_sys-LICENSE.txt"
+  },
+  {
+    "module": "golang.org/x/text",
+    "version": "v0.43.0",
+    "source": "https://pkg.go.dev/golang.org/x/text@v0.43.0",
+    "license_file": "golang.org_x_text-LICENSE.txt"
+  }
+]

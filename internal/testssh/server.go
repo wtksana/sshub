@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/pkg/sftp"
@@ -29,6 +30,10 @@ type Server struct {
 	Sizes                       chan [2]uint32
 	Root                        string
 	WriteDelay                  time.Duration
+	WriteLimit                  int64
+	LoadEnabled                 atomic.Bool
+	ShellCount                  atomic.Int64
+	SentBytes                   atomic.Uint64
 }
 
 const Password = "fixture-password-中文"
@@ -187,6 +192,8 @@ func (s *Server) channel(incoming ssh.NewChannel) {
 		return
 	}
 	defer channel.Close()
+	done := make(chan struct{})
+	defer close(done)
 	for req := range reqs {
 		switch req.Type {
 		case "pty-req":
@@ -201,7 +208,13 @@ func (s *Server) channel(incoming ssh.NewChannel) {
 			}
 		case "shell":
 			req.Reply(true, nil)
-			go func() { io.WriteString(channel, "\r\nSSHub local SSH fixture ready\r\n"); io.Copy(channel, channel) }()
+			s.ShellCount.Add(1)
+			go func() {
+				defer s.ShellCount.Add(-1)
+				io.WriteString(channel, "\r\nSSHub local SSH fixture ready\r\n")
+				io.Copy(channel, channel)
+			}()
+			go s.stream(channel, done)
 		case "subsystem":
 			var subsystem struct{ Name string }
 			if ssh.Unmarshal(req.Payload, &subsystem) != nil || subsystem.Name != "sftp" {
@@ -214,7 +227,7 @@ func (s *Server) channel(incoming ssh.NewChannel) {
 				continue
 			}
 			req.Reply(true, nil)
-			h := &rootedFiles{root: root, delay: s.WriteDelay}
+			h := &rootedFiles{root: root, delay: s.WriteDelay, limit: s.WriteLimit}
 			server := sftp.NewRequestServer(channel, sftp.Handlers{FileGet: h, FilePut: h, FileCmd: h, FileList: h})
 			go ssh.DiscardRequests(reqs)
 			server.Serve()

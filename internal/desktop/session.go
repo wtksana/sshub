@@ -29,6 +29,7 @@ type workspace struct {
 	files                   fileBrowser
 	retryRequests           []transfer.Request
 	term                    *terminal.Terminal
+	observed                *observedShell
 	searchOpen, searchFocus bool
 	search, searchApplied   string
 }
@@ -173,8 +174,9 @@ func (a *app) connect(tab *workspace) {
 			a.connectionFailed(tab, attempt, err)
 			return
 		}
+		observed := a.observeShell(shell)
 		term, err := terminal.New(terminal.Options{
-			Conn: shell, Font: terminal.Font{Family: fontFamily, Size: fontSize}, Scrollback: 2 << 20, ImageLimit: -1,
+			Conn: observed, Font: terminal.Font{Family: fontFamily, Size: fontSize}, Scrollback: 2 << 20, ImageLimit: -1,
 			OnZoom:   func(z terminal.Zoom) bool { a.zoom(tab, z.Steps, z.Reset); return true },
 			OnSearch: func(terminal.SearchStatus) { a.dispatch(func() {}) },
 			// Status is shown in the toolbar; an injected exit line can overwrite a partial remote line.
@@ -219,6 +221,7 @@ func (a *app) connect(tab *workspace) {
 			tab.cancel = nil
 			tab.transport, tab.shell = newTransport(client), shell
 			tab.term, tab.client, tab.status = term, client, "已连接"
+			tab.observed, _ = observed.(*observedShell)
 			a.zoom(tab, 0, false)
 			select {
 			case <-term.Done():
