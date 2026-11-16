@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"flag"
 	"os"
@@ -28,6 +29,12 @@ func main() {
 	if err := os.WriteFile(filepath.Join(*dir, "server.json"), data, 0600); err != nil {
 		panic(err)
 	}
-	var input [1]byte
-	os.Stdin.Read(input[:])
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		if scanner.Text() == "disconnect" {
+			s.Disconnect()
+		} else if scanner.Text() == "quit" {
+			return
+		}
+	}
 }

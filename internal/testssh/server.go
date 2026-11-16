@@ -132,6 +132,15 @@ func (s *Server) Close() {
 	}
 }
 
+// Disconnect simulates a dropped server connection while keeping its listener.
+func (s *Server) Disconnect() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for raw := range s.connections {
+		raw.Close()
+	}
+}
+
 func (s *Server) channel(incoming ssh.NewChannel) {
 	if incoming.ChannelType() == "direct-tcpip" {
 		var request struct {

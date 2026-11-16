@@ -12,7 +12,7 @@ func (a *app) files(c *ui.Context) {
 		if tab := a.activeWorkspace(); tab != nil {
 			status = tab.profile.Name + " · " + tab.status
 		}
-		ui.Text(c, status).FontSize(12).TextColor(t.TextMuted).Wrap()
+		ui.Text(c.Key("file-server"), status).FontSize(12).TextColor(t.TextMuted).Wrap()
 		ui.Divider(c)
 		ui.Text(c, "文件浏览即将提供。").TextColor(t.TextMuted).Wrap()
 		ui.Spacer(c)

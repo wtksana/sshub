@@ -115,7 +115,9 @@ try {
     UI press key=toggle-files --settle | Out-Null
     UI screenshot (Join-Path $directory 'terminal-resized.png') | Out-Null
     UI press key=toggle-files --settle | Out-Null
-    UI press key=close-tab-1 --settle | Out-Null
+    $closeRef = [regex]::Match((Snapshot), '(?m)^\s*(@e\d+) \[button\] "关闭工作区 本地安全 SSH"').Groups[1].Value
+    if (!$closeRef) { throw 'Session close button missing' }
+    UI press $closeRef --settle | Out-Null
     Wait-Text '关闭终端会话？'
     UI key Escape --settle | Out-Null
     Wait-Text '本地安全 SSH · 已连接'

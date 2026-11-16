@@ -15,15 +15,17 @@ import (
 )
 
 type workspace struct {
-	key     int
-	profile library.Profile
-	jump    *library.Profile
-	status  string
-	err     string
-	attempt int
-	cancel  context.CancelFunc
-	client  *connection.Client
-	term    *terminal.Terminal
+	key                     int
+	profile                 library.Profile
+	jump                    *library.Profile
+	status                  string
+	err                     string
+	attempt                 int
+	cancel                  context.CancelFunc
+	client                  *connection.Client
+	term                    *terminal.Terminal
+	searchOpen, searchFocus bool
+	search, searchApplied   string
 }
 
 func (a *app) dispatch(fn func()) {
@@ -37,8 +39,15 @@ func (a *app) dispatch(fn func()) {
 }
 
 func (a *app) activeWorkspace() *workspace {
+	if a.layout == nil || a.layout.Current() == nil {
+		return nil
+	}
+	return a.workspaceByID(a.layout.Current().Active)
+}
+
+func (a *app) workspaceByID(id int) *workspace {
 	for _, tab := range a.tabs {
-		if tab.key == a.activeTab {
+		if tab.key == id {
 			return tab
 		}
 	}
@@ -77,12 +86,7 @@ func (a *app) removeTab(key int) {
 		}
 	}
 	a.tabs = slices.DeleteFunc(a.tabs, func(v *workspace) bool { return v.key == key })
-	if a.activeTab == key {
-		a.activeTab = 0
-		if len(a.tabs) > 0 {
-			a.activeTab = a.tabs[len(a.tabs)-1].key
-		}
-	}
+	a.layout.Close(key)
 }
 
 func (a *app) requestClose(tab *workspace) {
@@ -105,7 +109,12 @@ func (a *app) connect(tab *workspace) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	tab.cancel, tab.status, tab.err = cancel, "连接中", ""
+	tab.searchOpen, tab.searchApplied = false, ""
 	attempt := tab.attempt
+	fontSize := float32(13)
+	if _, saved := a.layout.Locate(tab.key); saved != nil {
+		fontSize = saved.FontSize
+	}
 	go func() {
 		saved := map[string]string{}
 		options := func(p library.Profile) connection.Options {
@@ -143,7 +152,9 @@ func (a *app) connect(tab *workspace) {
 			return
 		}
 		term, err := terminal.New(terminal.Options{
-			Conn: shell, Font: terminal.Font{Family: "Cascadia Mono", Size: 13}, Scrollback: 2 << 20, ImageLimit: -1,
+			Conn: shell, Font: terminal.Font{Family: "Cascadia Mono", Size: fontSize}, Scrollback: 2 << 20, ImageLimit: -1,
+			OnZoom:   func(z terminal.Zoom) bool { a.zoom(tab, z.Steps, z.Reset); return true },
+			OnSearch: func(terminal.SearchStatus) { a.dispatch(func() {}) },
 			// Status is shown in the toolbar; an injected exit line can overwrite a partial remote line.
 			NoExitMessage: true,
 			OnExit: func(int) {

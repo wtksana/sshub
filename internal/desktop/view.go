@@ -2,11 +2,13 @@ package desktop
 
 import (
 	"runtime"
+	"time"
 
 	"github.com/egoist/mygo/ui"
 )
 
 func (a *app) view(c *ui.Context) {
+	a.focusedTerminal = 0
 	t := *c.Theme()
 	t.Spacing, t.Radius, t.FontSize = 4, 5, 13
 	if runtime.GOOS == "windows" {
@@ -62,7 +64,15 @@ func (a *app) view(c *ui.Context) {
 			ui.Split(c.Key("library-divider"), &a.leftSize, func() { a.sidebar(c) }, main).SplitReset(260).Grow(1).FillWidth()
 		}
 	})
+	if a.focusedTerminal != a.lastFocusedTerminal {
+		if a.focusedTerminal != 0 {
+			a.layout.Activate(a.focusedTerminal)
+			c.After(time.Millisecond)
+		}
+		a.lastFocusedTerminal = a.focusedTerminal
+	}
 	a.editorView(c)
+	a.captureLayout()
 	a.sessionDialogs(c)
 	a.promptView(c)
 	if ui.AlertDialog(c.Key("delete-confirm"), &a.deleting, "删除连接配置？", "将删除“"+a.deleteName+"”的已保存配置，已打开的工作区不受影响。", "取消", "删除配置") == 1 {

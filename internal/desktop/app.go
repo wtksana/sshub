@@ -7,41 +7,50 @@ import (
 	"github.com/egoist/mygo"
 	"sshub/internal/connection"
 	"sshub/internal/library"
+	layout "sshub/internal/workspace"
 )
 
 type app struct {
-	dir                      string
-	store                    *library.Store
-	profiles                 []library.Profile
-	loadError, actionError   string
-	query, scope, group      string
-	selected                 string
-	leftSize, contentPercent float32
-	hideLeft, hideRight      bool
-	editing, deleting        bool
-	editGeneration           int
-	draft                    editor
-	deleteID, deleteName     string
-	tabs                     []*workspace
-	nextTab, activeTab       int
-	win                      *mygo.Window
-	closing                  atomic.Bool
-	trust                    *connection.TrustStore
-	prompts                  chan *connectionPrompt
-	prompt                   *connectionPrompt
-	promptGeneration         int
-	closeTabID               int
-	confirmCloseTab          bool
-	confirmQuit, allowQuit   bool
-	manageHosts              bool
-	hosts                    []connection.HostIdentity
-	forgetHost               string
-	confirmForgetHost        bool
-	notice                   string
+	dir                                  string
+	store                                *library.Store
+	profiles                             []library.Profile
+	loadError, actionError               string
+	query, scope, group                  string
+	selected                             string
+	leftSize, contentPercent             float32
+	hideLeft, hideRight                  bool
+	editing, deleting                    bool
+	editGeneration                       int
+	draft                                editor
+	deleteID, deleteName                 string
+	tabs                                 []*workspace
+	layout                               *layout.State
+	layoutStore                          *layout.Store
+	layoutQueue                          chan []byte
+	layoutDone                           chan struct{}
+	layoutSnapshot                       string
+	layoutReadOnly                       bool
+	terminalFocus                        int
+	revealedTabs                         map[int]int
+	focusedTerminal, lastFocusedTerminal int
+	win                                  *mygo.Window
+	closing                              atomic.Bool
+	trust                                *connection.TrustStore
+	prompts                              chan *connectionPrompt
+	prompt                               *connectionPrompt
+	promptGeneration                     int
+	closeTabID                           int
+	confirmCloseTab                      bool
+	confirmQuit, allowQuit               bool
+	manageHosts                          bool
+	hosts                                []connection.HostIdentity
+	forgetHost                           string
+	confirmForgetHost                    bool
+	notice                               string
 }
 
 func newApp(dir string) *app {
-	a := &app{dir: dir, leftSize: 260, contentPercent: 66, group: "全部分组", prompts: make(chan *connectionPrompt, 16)}
+	a := &app{dir: dir, leftSize: 260, contentPercent: 66, group: "全部分组", prompts: make(chan *connectionPrompt, 16), revealedTabs: map[int]int{}}
 	a.load()
 	return a
 }
@@ -66,10 +75,14 @@ func (a *app) load() {
 	a.store, a.loadError = s, ""
 	a.trust = connection.NewTrustStore(a.dir)
 	a.refresh()
+	a.restoreLayout()
 }
 
 func (a *app) close() {
-	a.closing.Store(true)
+	if a.closing.Swap(true) {
+		return
+	}
+	a.flushLayout()
 	for _, tab := range a.tabs {
 		a.release(tab)
 		if tab.term != nil {
@@ -97,16 +110,25 @@ func (a *app) openWorkspace(p library.Profile) {
 		return
 	}
 	a.refresh()
-	a.nextTab++
-	tab := &workspace{key: a.nextTab, profile: p, status: "待连接"}
+	id, err := a.layout.Add(p.ID)
+	if err != nil {
+		a.actionError = err.Error()
+		return
+	}
+	tab := a.newWorkspace(id, p)
+	a.tabs = append(a.tabs, tab)
+	a.actionError = ""
+}
+
+func (a *app) newWorkspace(id int, p library.Profile) *workspace {
+	tab := &workspace{key: id, profile: p, status: "待连接"}
 	if p.JumpID != "" {
 		if i := slices.IndexFunc(a.profiles, func(v library.Profile) bool { return v.ID == p.JumpID }); i >= 0 {
 			jump := a.profiles[i]
 			tab.jump = &jump
 		}
 	}
-	a.tabs = append(a.tabs, tab)
-	a.activeTab, a.actionError = a.nextTab, ""
+	return tab
 }
 
 func (a *app) favorite(p library.Profile) {
