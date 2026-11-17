@@ -25,6 +25,7 @@ type diagnosticSample struct {
 	At            time.Time `json:"at"`
 	ReadyAt       time.Time `json:"ready_at"`
 	Connected     int       `json:"connected"`
+	Highlighted   int       `json:"highlighted"`
 	ReceivedBytes []uint64  `json:"received_bytes"`
 	HeapBytes     uint64    `json:"heap_bytes"`
 	Goroutines    int       `json:"goroutines"`
@@ -68,6 +69,9 @@ func (a *app) sampleDiagnostics() {
 	for _, tab := range a.tabs {
 		if tab.status == "已连接" {
 			s.Connected++
+			if tab.highlight != nil && tab.highlight.Enabled() {
+				s.Highlighted++
+			}
 		}
 		if tab.observed != nil {
 			s.ReceivedBytes = append(s.ReceivedBytes, tab.observed.received.Load())
