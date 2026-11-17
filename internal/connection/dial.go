@@ -165,14 +165,15 @@ func targetAddress(target string) (string, string, error) {
 
 func (c *Client) Close() {
 	c.once.Do(func() {
+		// Close the outer TCP transport before a forwarded channel can block on it.
+		if c.jump != nil {
+			c.jump.Close()
+		}
 		if c.client != nil {
 			c.client.Close()
 		}
 		if c.agent != nil {
 			c.agent.Close()
-		}
-		if c.jump != nil {
-			c.jump.Close()
 		}
 	})
 }

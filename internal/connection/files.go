@@ -4,79 +4,88 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"slices"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 )
 
-// Files owns one SFTP channel. Canceling it never closes sibling channels.
+// Files owns one SFTP channel. An unresponsive channel may close its transport.
 type Files struct {
 	*sftp.Client
-	session *ssh.Session
-	stop    func() bool
+	closeChannel func() error
+	stop         func() bool
 }
 
 func (c *Client) OpenFiles(ctx context.Context) (*Files, error) {
-	type result struct {
-		session *ssh.Session
-		err     error
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	ready := make(chan result)
-	go func() {
-		s, err := c.client.NewSession()
-		select {
-		case ready <- result{s, err}:
-		case <-ctx.Done():
-			if s != nil {
-				s.Close()
-			}
-		}
-	}()
-	var s *ssh.Session
-	select {
-	case r := <-ready:
-		if r.err != nil {
-			return nil, r.err
-		}
-		s = r.session
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	}
-	stop := context.AfterFunc(ctx, func() { s.Close() })
-	fail := func(err error) (*Files, error) {
-		stop()
-		s.Close()
+	// Opening a channel itself cannot be canceled through the SSH channel API.
+	setupDone := make(chan struct{})
+	stopSetup := context.AfterFunc(ctx, func() {
+		timer := time.AfterFunc(time.Second, c.Close)
+		defer timer.Stop()
+		<-setupDone
+	})
+	defer stopSetup()
+	defer close(setupDone)
+	channel, requests, err := c.client.OpenChannel("session", nil)
+	if err != nil {
 		if ctx.Err() != nil {
 			err = ctx.Err()
 		}
 		return nil, err
 	}
-	in, err := s.StdinPipe()
+	closed := make(chan struct{})
+	go func() { ssh.DiscardRequests(requests); close(closed) }()
+	go io.Copy(io.Discard, channel.Stderr())
+	closeChannel := sync.OnceValue(func() error {
+		// Close only sends a request; wait for the peer, then force a dead transport closed.
+		timer := time.AfterFunc(time.Second, c.Close)
+		defer timer.Stop()
+		err := channel.Close()
+		<-closed
+		return err
+	})
+	stop := context.AfterFunc(ctx, func() { closeChannel() })
+	fail := func(err error) (*Files, error) {
+		stop()
+		closeChannel()
+		if ctx.Err() != nil {
+			err = ctx.Err()
+		}
+		return nil, err
+	}
+	ok, err := channel.SendRequest("subsystem", true, ssh.Marshal(struct{ Name string }{"sftp"}))
 	if err != nil {
 		return fail(err)
 	}
-	out, err := s.StdoutPipe()
+	if !ok {
+		return fail(errors.New("服务器拒绝启动 SFTP 子系统"))
+	}
+	client, err := sftp.NewClientPipe(channel, channel)
 	if err != nil {
 		return fail(err)
 	}
-	if err = s.RequestSubsystem("sftp"); err != nil {
-		return fail(err)
+	if ctx.Err() != nil {
+		stop()
+		closeChannel()
+		client.Close()
+		return nil, ctx.Err()
 	}
-	client, err := sftp.NewClientPipe(out, in)
-	if err != nil {
-		return fail(err)
-	}
-	return &Files{Client: client, session: s, stop: stop}, nil
+	return &Files{Client: client, closeChannel: closeChannel, stop: stop}, nil
 }
 
 func (f *Files) Close() error {
 	f.stop()
-	// Close the SSH channel first so an unresponsive server cannot block cleanup.
-	f.session.Close()
+	f.closeChannel()
 	return f.Client.Close()
 }
 

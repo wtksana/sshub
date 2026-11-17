@@ -83,7 +83,7 @@ func (a *app) fileDialogs(c *ui.Context) {
 				if e.kind == "properties" {
 					ui.Text(c, fmt.Sprintf("%s · %s\n修改时间：%s", e.info.Mode(), bytesText(e.info.Size()), e.info.ModTime().Format(time.DateTime))).Wrap()
 				}
-				if e.info == nil || e.info.Mode()&os.ModeSymlink == 0 {
+				if e.kind != "properties" || e.info.Mode()&os.ModeSymlink == 0 {
 					textInput(c.Key("file-edit-value"), &e.value).Label(map[bool]string{true: "八进制权限", false: "名称"}[e.kind == "properties"]).AutoFocus().FillWidth()
 				} else {
 					ui.Text(c, "符号链接不支持在此修改目标权限").Wrap()

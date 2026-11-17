@@ -2,10 +2,8 @@ package connection
 
 import (
 	"io"
-	"sort"
 	"sync"
 
-	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -47,25 +45,4 @@ func (s *Shell) Resize(cols, rows int) error { return s.session.WindowChange(row
 func (s *Shell) Close() error {
 	s.once.Do(func() { s.in.Close(); s.err = s.session.Close() })
 	return s.err
-}
-func (c *Client) ListHome() ([]string, error) {
-	s, err := sftp.NewClient(c.client)
-	if err != nil {
-		return nil, err
-	}
-	defer s.Close()
-	files, err := s.ReadDir(".")
-	if err != nil {
-		return nil, err
-	}
-	names := make([]string, 0, len(files))
-	for _, f := range files {
-		name := f.Name()
-		if f.IsDir() {
-			name += "/"
-		}
-		names = append(names, name)
-	}
-	sort.Strings(names)
-	return names, nil
 }

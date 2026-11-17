@@ -1,6 +1,7 @@
 package connection
 
 import (
+	"context"
 	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/pem"
@@ -9,7 +10,6 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -63,13 +63,23 @@ func TestSSHAndSFTPAgainstLocalServer(t *testing.T) {
 	case <-time.After(3 * time.Second):
 		t.Fatal("echo timed out")
 	}
-	names, err := c.ListHome()
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	files, err := c.OpenFiles(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !slices.Contains(names, "fixture.txt") {
-		t.Fatalf("SFTP fixture missing: %v", names)
+	defer files.Close()
+	_, entries, err := files.Browse(ctx, "")
+	if err != nil {
+		t.Fatal(err)
 	}
+	for _, entry := range entries {
+		if entry.Name() == "fixture.txt" {
+			return
+		}
+	}
+	t.Fatal("SFTP fixture missing")
 }
 
 func TestSSHRejectsUnknownAndChangedHostKeys(t *testing.T) {

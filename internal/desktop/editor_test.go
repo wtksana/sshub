@@ -5,8 +5,57 @@ import (
 	"testing"
 	"time"
 
+	"github.com/egoist/mygo/ui"
 	"sshub/internal/library"
 )
+
+func TestJumpSelectionKeepsIDsAcrossSameNamesAndGroups(t *testing.T) {
+	a := newApp(t.TempDir())
+	defer a.close()
+	var jumps []library.Profile
+	for _, group := range []string{"生产", "开发"} {
+		p, err := a.store.Upsert(library.Profile{Name: "gateway", Group: group, Host: group + ".invalid", Port: 22, Username: "test", Auth: "agent"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		jumps = append(jumps, p)
+	}
+	target, err := a.store.Upsert(library.Profile{Name: "target", Host: "target.invalid", Port: 22, Username: "test", Auth: "agent", JumpID: jumps[0].ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	a.refresh()
+	a.beginEdit(target)
+	a.saveDraft()
+	saved, ok := a.selectedProfile()
+	if !ok || a.draft.err != "" || saved.JumpID != jumps[0].ID {
+		t.Fatal("saving without edits changed the jump", a.draft.err)
+	}
+	a.beginEdit(saved)
+	view := ui.NewTester(func(c *ui.Context) {
+		ui.Column(c).Fill().Padding(8).Children(func() { a.jumpSelect(c) })
+	}, 600, 400)
+	for _, choice := range []struct{ label, id string }{{"经由：gateway · 开发", jumps[1].ID}, {"不使用跳板机", ""}} {
+		label := "经由：gateway · 生产"
+		if a.draft.profile.JumpID == jumps[1].ID {
+			label = "经由：gateway · 开发"
+		}
+		if err := view.Click(label); err != nil {
+			t.Fatal(err)
+		}
+		if err := view.Click(choice.label); err != nil {
+			t.Fatal(err)
+		}
+		if a.draft.profile.JumpID != choice.id {
+			t.Fatal("dropdown selected the wrong jump")
+		}
+		a.saveDraft()
+		saved, _ = a.selectedProfile()
+		if a.draft.err != "" || saved.JumpID != choice.id {
+			t.Fatal("saving lost the selected jump", a.draft.err)
+		}
+	}
+}
 
 func TestJumpNameCannotBeConfusedWithDirectConnection(t *testing.T) {
 	a := newApp(t.TempDir())
@@ -30,7 +79,7 @@ func TestJumpNameCannotBeConfusedWithDirectConnection(t *testing.T) {
 		t.Fatal("editing silently removed jump")
 	}
 	a.beginEdit(p)
-	a.draft.jumpLabel = "不使用跳板机"
+	a.draft.profile.JumpID = ""
 	a.saveDraft()
 	p, ok = a.selectedProfile()
 	if !ok || p.JumpID != "" {

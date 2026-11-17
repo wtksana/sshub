@@ -16,7 +16,6 @@ type editor struct {
 	auth             string
 	err              string
 	advanced         bool
-	jumpLabel        string
 }
 
 func (a *app) beginEdit(p library.Profile) {
@@ -51,12 +50,6 @@ func (a *app) beginCopy(p library.Profile) {
 func (a *app) startEditor(p library.Profile) {
 	a.draft = editor{profile: p, port: strconv.Itoa(p.Port), auth: authLabel(p.Auth)}
 	a.draft.advanced = p.JumpID != ""
-	a.draft.jumpLabel = "不使用跳板机"
-	for _, v := range a.profiles {
-		if v.ID == p.JumpID {
-			a.draft.jumpLabel = "经由：" + v.Name
-		}
-	}
 	a.editGeneration++
 	a.editing = true
 }
@@ -83,18 +76,6 @@ func (a *app) saveDraft() {
 		return
 	}
 	p.Port = port
-	p.JumpID = ""
-	if a.draft.jumpLabel != "不使用跳板机" {
-		for _, v := range a.profiles {
-			if a.draft.jumpLabel == "经由："+v.Name {
-				p.JumpID = v.ID
-			}
-		}
-		if p.JumpID == "" {
-			a.draft.err = "跳板机配置已不存在，请重新选择"
-			return
-		}
-	}
 	switch a.draft.auth {
 	case "密码":
 		p.Auth, p.IdentityPath = "password", ""
@@ -151,15 +132,7 @@ func (a *app) editorView(c *ui.Context) {
 			ui.Checkbox(c.Key("profile-favorite"), &a.draft.profile.Favorite, "加入收藏")
 			ui.Checkbox(c.Key("profile-advanced"), &a.draft.advanced, "高级选项")
 			if a.draft.advanced {
-				choices := []string{"不使用跳板机"}
-				for _, v := range a.profiles {
-					if v.ID != a.draft.profile.ID && v.JumpID == "" {
-						choices = append(choices, "经由："+v.Name)
-					}
-				}
-				formField(c, "单层跳板机", func() {
-					ui.Select(c.Key("profile-jump"), &a.draft.jumpLabel, choices).FillWidth().MinHeight(36).Radius(6)
-				})
+				formField(c, "单层跳板机", func() { a.jumpSelect(c) })
 			}
 		})
 		if a.draft.err != "" {
@@ -169,6 +142,47 @@ func (a *app) editorView(c *ui.Context) {
 		ui.Row(c).Gap(8).Justify(ui.End).Children(func() {
 			ui.Button(c.Key("cancel-profile"), "取消").OnClick(func() { a.editing = false })
 			ui.PrimaryButton(c.Key("save-profile"), "保存连接").OnClick(a.saveDraft)
+		})
+	})
+}
+
+func (a *app) jumpSelect(c *ui.Context) {
+	t := c.Theme()
+	choices := []library.Profile{{Name: "不使用跳板机"}}
+	label := "跳板机配置已不存在，请重新选择"
+	for _, p := range a.profiles {
+		if p.ID != a.draft.profile.ID && p.JumpID == "" {
+			group := p.Group
+			if group == "" {
+				group = "未分组"
+			}
+			p.Name = "经由：" + p.Name + " · " + group
+			choices = append(choices, p)
+		}
+	}
+	for _, p := range choices {
+		if p.ID == a.draft.profile.JumpID {
+			label = p.Name
+		}
+	}
+	sel := ui.SelectBase(c.Key("profile-jump"), &a.draft.profile.JumpID)
+	sel.Trigger.Label(label).Value(label).FillWidth().MinHeight(36).Padding(8, 10).Radius(6).Background(t.Background).Border(1, t.Border).Gap(8).Children(func() {
+		ui.Text(c, label).SingleLine().Grow(1).MinWidth(0)
+		ui.Icon(c, iconNext).Size(12, 12).Shrink(0)
+	})
+	if sel.Trigger.Focused() {
+		sel.Trigger.Border(1, t.Focus)
+	}
+	sel.Popup(func(panel ui.Element) {
+		panel.Padding(4).Background(t.Background).Border(1, t.Border).Radius(6)
+		ui.Scroll(c).MaxHeight(200).FillWidth().Gap(2).Children(func() {
+			for _, p := range choices {
+				item := sel.Item(p.ID).Label(p.Name).Padding(6, 10).Radius(4)
+				if item.Highlighted() {
+					item.Background(t.Selection)
+				}
+				item.Children(func() { ui.Text(c, p.Name).SingleLine() })
+			}
 		})
 	})
 }
