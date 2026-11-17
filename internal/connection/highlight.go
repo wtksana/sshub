@@ -35,8 +35,12 @@ type HighlightStream struct {
 	chunkAt                            time.Time
 	state                              byte
 	foreground, skipLine, previousWord bool
+	savedForeground                    bool
+	savedForegroundKnown               bool
 	alt                                [3]bool
+	altForeground                      [3]bool
 	lineBytes                          int
+	budget                             highlightBudget
 }
 
 type highlightRead struct {
@@ -100,6 +104,7 @@ func (h *HighlightStream) Read(p []byte) (int, error) {
 		return 0, nil
 	}
 	for len(h.out) == 0 {
+		h.budget = newHighlightBudget()
 		if h.err != nil {
 			return 0, h.err
 		}
@@ -158,7 +163,7 @@ func (h *HighlightStream) flush(boundary bool) {
 		h.out = append(h.out, p...)
 	} else if rules := h.rules.Load(); rules != nil {
 		var ok bool
-		h.out, ok = rules.append(h.out, p, h.previousWord, boundary, h.dark.Load())
+		h.out, ok = rules.appendBudget(h.out, p, h.previousWord, boundary, h.dark.Load(), &h.budget)
 		if !ok {
 			h.degraded.Store(true)
 		}
@@ -277,7 +282,13 @@ func (h *HighlightStream) controlByte(b byte) {
 		case 'c':
 			h.state = 0
 			h.foreground = false
+			h.savedForegroundKnown = false
 			h.alt = [3]bool{}
+		case '7':
+			h.savedForeground, h.savedForegroundKnown, h.state = h.foreground, true, 0
+		case '8':
+			h.restoreForeground()
+			h.state, h.skipLine = 0, true
 		default:
 			if b >= 0x20 && b <= 0x2f {
 				h.state = 'i'
@@ -331,6 +342,15 @@ func (h *HighlightStream) csi(final byte, params string) {
 		h.sgr(params)
 		return
 	}
+	if params == "" && final == 's' {
+		h.savedForeground, h.savedForegroundKnown = h.foreground, true
+		return
+	}
+	if params == "" && final == 'u' {
+		h.restoreForeground()
+		h.skipLine = true
+		return
+	}
 	if (final == 'h' || final == 'l') && strings.HasPrefix(params, "?") {
 		for _, mode := range strings.Split(params[1:], ";") {
 			i := -1
@@ -343,6 +363,12 @@ func (h *HighlightStream) csi(final byte, params string) {
 				i = 2
 			}
 			if i >= 0 {
+				if final == 'h' && !h.alt[i] {
+					h.altForeground[i] = h.foreground
+				}
+				if final == 'l' {
+					h.foreground = h.foreground || !h.alt[i] || h.altForeground[i]
+				}
 				h.alt[i] = final == 'h'
 			}
 		}
@@ -351,6 +377,13 @@ func (h *HighlightStream) csi(final byte, params string) {
 	// Cursor movement, erase and reports are kept intact; color the next
 	// logical line only, rather than guessing what was overwritten.
 	h.skipLine = true
+}
+
+func (h *HighlightStream) restoreForeground() {
+	// An unmatched restore can recover an explicit server color we never saw.
+	// shortcut: ambiguous restores skip coloring until explicit reset; revisit
+	// only if the terminal exposes its effective foreground state.
+	h.foreground = h.foreground || !h.savedForegroundKnown || h.savedForeground
 }
 
 func (h *HighlightStream) sgr(params string) {

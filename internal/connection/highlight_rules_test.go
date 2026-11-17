@@ -23,7 +23,7 @@ func TestHighlightRulePrioritySnapshotAndBounds(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		text := strings.Repeat("a ", 2000)
+		text := strings.Repeat("a ", 5000)
 		got, ok = rules.append(nil, []byte(text), false, true, false)
 		if ok || string(got) != text {
 			t.Fatal("match budget did not preserve plain text")

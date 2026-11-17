@@ -2,12 +2,38 @@ package library
 
 import (
 	"errors"
+	"fmt"
+	"regexp"
 	"slices"
 	"strconv"
+
+	"sshub/internal/highlight"
 )
 
 type LogHighlightPreferences struct {
 	Builtins []BuiltinHighlightRule `json:"builtins"`
+	Custom   []CustomHighlightRule  `json:"custom,omitempty"`
+}
+
+const MaxCustomHighlightRules = 32
+
+type CustomHighlightRule struct {
+	Kind          string `json:"kind"`
+	Pattern       string `json:"pattern"`
+	Enabled       bool   `json:"enabled"`
+	CaseSensitive bool   `json:"case_sensitive"`
+	Color         string `json:"color"`
+}
+
+func (r CustomHighlightRule) Expression() string {
+	p := r.Pattern
+	if r.Kind == "keyword" {
+		p = regexp.QuoteMeta(p)
+	}
+	if !r.CaseSensitive {
+		p = "(?i)" + p
+	}
+	return p
 }
 
 type BuiltinHighlightRule struct {
@@ -33,6 +59,7 @@ func (p Preferences) Clone() Preferences {
 	if p.LogHighlight != nil {
 		copy := *p.LogHighlight
 		copy.Builtins = slices.Clone(copy.Builtins)
+		copy.Custom = slices.Clone(copy.Custom)
 		p.LogHighlight = &copy
 	}
 	return p
@@ -54,6 +81,30 @@ func ValidHighlightColor(color string) bool {
 }
 
 func validateLogHighlight(p LogHighlightPreferences) error {
+	if len(p.Custom) > MaxCustomHighlightRules {
+		return errors.New("自定义日志高亮最多 32 条规则")
+	}
+	// Reserve the fixed presets even when disabled, so toggles preserve validity.
+	total := 139
+	for i, rule := range p.Custom {
+		if rule.Kind != "keyword" && rule.Kind != "regex" {
+			return fmt.Errorf("自定义规则 %d：未知规则类型", i+1)
+		}
+		if !ValidHighlightColor(rule.Color) {
+			return fmt.Errorf("自定义规则 %d：颜色必须为 #RRGGBB", i+1)
+		}
+		if rule.Pattern == "" || len(rule.Pattern) > highlight.MaxPatternBytes {
+			return fmt.Errorf("自定义规则 %d：匹配内容不能为空，且最多为 1024 个 UTF-8 字节", i+1)
+		}
+		_, cost, err := highlight.Compile(rule.Expression())
+		if err != nil {
+			return fmt.Errorf("自定义规则 %d：%w", i+1, err)
+		}
+		total += cost
+		if total > highlight.MaxTotalInstructions {
+			return errors.New("日志高亮规则整体过于复杂，请减少规则或简化表达式")
+		}
+	}
 	defaults := DefaultLogHighlightPreferences().Builtins
 	if len(p.Builtins) != len(defaults) {
 		return errors.New("日志高亮预设必须包含全部七项规则")
