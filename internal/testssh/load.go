@@ -26,7 +26,8 @@ func (s *Server) stream(channel ssh.Channel, done <-chan struct{}) {
 		var batch strings.Builder
 		for range 20 {
 			sequence++
-			line := fmt.Sprintf("\x1b[32m%010d\x1b[0m SSHub 性能 load ", sequence)
+			level := [...]string{"INFO", "WARN", "ERROR"}[sequence%3]
+			line := fmt.Sprintf("\x1b[32m%010d\x1b[0m %s 2026-11-17T12:00:00Z {\"message\":\"性能\",\"id\":42} ", sequence, level)
 			line += strings.Repeat("x", 99-len(line)) + "\r\n"
 			batch.WriteString(line)
 		}
