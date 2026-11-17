@@ -68,6 +68,34 @@ func TestHighlightPreservesANSIAndControlStrings(t *testing.T) {
 	}
 }
 
+func TestHighlightPrivateCSIAndRestartedEscapesPreserveForeground(t *testing.T) {
+	for _, sequence := range []string{"\x1b[>4;0m", "\x1b[?0m", "\x1b[=0m", "\x1b[<0m", "\x1b[0 m", "\x1b[0$m"} {
+		input := "\x1b[31m" + sequence + "ERROR\nINFO\n\x1b[39mINFO\n"
+		want := "\x1b[31m" + sequence + "ERROR\nINFO\n\x1b[39m" + addLevel("INFO") + "\n"
+		for chunk := 1; chunk <= len(input); chunk++ {
+			got, _ := transformHighlight(input, chunk)
+			if got != want {
+				t.Fatalf("sequence %q chunk %d: %q", sequence, chunk, got)
+			}
+		}
+	}
+	for _, prefix := range []string{"\x1b\x1b", "\x1b\x1b\x1b", "\x1b[12\x1b", "\x1b(\x1b"} {
+		input := prefix + "[31mERROR\nINFO\n\x1b[0;1mINFO\n"
+		want := prefix + "[31mERROR\nINFO\n\x1b[0;1m" + addLevel("INFO") + "\n"
+		for chunk := 1; chunk <= len(input); chunk++ {
+			got, _ := transformHighlight(input, chunk)
+			if got != want {
+				t.Fatalf("prefix %q chunk %d: %q", prefix, chunk, got)
+			}
+		}
+	}
+	input := "\x1b[>4;0mERROR\nINFO\n"
+	want := "\x1b[>4;0mERROR\n" + addLevel("INFO") + "\n"
+	if got, _ := transformHighlight(input, 1); got != want {
+		t.Fatalf("private CSI invented a foreground color: %q", got)
+	}
+}
+
 func TestHighlightToggleTracksRemoteColorAndTheme(t *testing.T) {
 	h := &HighlightStream{}
 	h.transform([]byte("\x1b[31m"))
