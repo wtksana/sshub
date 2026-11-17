@@ -12,6 +12,7 @@ type Preferences struct {
 	FontSize              int    `json:"font_size"`
 	UIFontFamily          string `json:"ui_font_family,omitempty"`
 	UIFontSize            int    `json:"ui_font_size,omitempty"`
+	ScrollbackMiB         int    `json:"scrollback_mib,omitempty"`
 	SkipCloseConfirmation bool   `json:"skip_close_confirmation,omitempty"`
 }
 
@@ -35,7 +36,17 @@ func ValidatePreferences(p Preferences) error {
 	if p.UIFontSize != 0 && (p.UIFontSize < 10 || p.UIFontSize > 20) {
 		return errors.New("界面字号必须为 10–20")
 	}
+	if p.ScrollbackMiB != 0 && p.ScrollbackMiB != 2 && p.ScrollbackMiB != 8 && p.ScrollbackMiB != 32 && p.ScrollbackMiB != 64 {
+		return errors.New("终端历史缓冲必须为 2、8、32 或 64 MiB")
+	}
 	return nil
+}
+
+func (p Preferences) EffectiveScrollbackMiB() int {
+	if p.ScrollbackMiB == 0 {
+		return 2
+	}
+	return p.ScrollbackMiB
 }
 
 // UI defaults also apply to preferences saved before separate UI fonts existed.

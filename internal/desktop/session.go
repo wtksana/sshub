@@ -136,6 +136,7 @@ func (a *app) connect(tab *sessionTab) {
 	attempt := tab.attempt
 	fontSize := float32(a.preferences.FontSize)
 	fontFamily := a.preferences.FontFamily
+	scrollback := a.preferences.EffectiveScrollbackMiB() << 20
 	if _, saved := a.layout.Locate(tab.key); saved != nil {
 		fontSize = saved.FontSize
 	}
@@ -178,7 +179,7 @@ func (a *app) connect(tab *sessionTab) {
 		observed := a.observeShell(shell)
 		term, err := terminal.New(terminal.Options{
 			Theme: githubTerminalLight, DarkTheme: githubTerminalDark,
-			Conn: observed, Font: terminal.Font{Family: fontFamily, Size: fontSize}, Scrollback: 2 << 20, ImageLimit: -1,
+			Conn: observed, Font: terminal.Font{Family: fontFamily, Size: fontSize}, Scrollback: scrollback, ImageLimit: -1,
 			OnZoom:   func(z terminal.Zoom) bool { a.zoom(tab, z.Steps, z.Reset); return true },
 			OnSearch: func(terminal.SearchStatus) { a.dispatch(func() {}) },
 			// Status is shown in the toolbar; an injected exit line can overwrite a partial remote line.
