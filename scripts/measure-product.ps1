@@ -80,7 +80,7 @@ try {
         $received=0
         if ($latest) {foreach ($bytes in $latest.received_bytes) {$received += [long]$bytes}}
         $highlighted = if ($latest -and $null -ne $latest.highlighted) { [int]$latest.highlighted } else { 0 }
-        $sample=[pscustomobject]@{at=$now.ToString('o');elapsed_seconds=($now-$launched).TotalSeconds;phase=$phase;phase_seconds=($now-$phaseStarted).TotalSeconds;working_set_bytes=$appProcess.WorkingSet64;private_bytes=$appProcess.PrivateMemorySize64;cpu_one_core_percent=100*($cpu-$lastCPU)/[Math]::Max(.001,($now-$lastAt).TotalSeconds);connected=$(if ($latest){$latest.connected}else{0});highlighted=$highlighted;received_bytes=$received;heap_bytes=$(if($latest){$latest.heap_bytes}else{0});goroutines=$(if($latest){$latest.goroutines}else{0})}
+        $sample=[pscustomobject]@{at=$now.ToString('o');elapsed_seconds=($now-$launched).TotalSeconds;phase=$phase;phase_seconds=($now-$phaseStarted).TotalSeconds;working_set_bytes=$appProcess.WorkingSet64;private_bytes=$appProcess.PrivateMemorySize64;cpu_one_core_percent=100*($cpu-$lastCPU)/[Math]::Max(.001,($now-$lastAt).TotalSeconds);connected=$(if ($latest){$latest.connected}else{0});highlighted=$highlighted;degraded=$(if ($latest){$latest.degraded}else{0});received_bytes=$received;heap_bytes=$(if($latest){$latest.heap_bytes}else{0});goroutines=$(if($latest){$latest.goroutines}else{0})}
         $samples.Add($sample)
         $samples | Select-Object -Last 1 | Export-Csv -NoTypeInformation -Append -Encoding utf8 (Join-Path $directory 'samples.csv')
         $lastCPU=$cpu;$lastAt=$now

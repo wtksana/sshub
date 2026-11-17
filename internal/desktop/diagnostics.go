@@ -26,6 +26,7 @@ type diagnosticSample struct {
 	ReadyAt       time.Time `json:"ready_at"`
 	Connected     int       `json:"connected"`
 	Highlighted   int       `json:"highlighted"`
+	Degraded      int       `json:"degraded"`
 	ReceivedBytes []uint64  `json:"received_bytes"`
 	HeapBytes     uint64    `json:"heap_bytes"`
 	Goroutines    int       `json:"goroutines"`
@@ -71,6 +72,9 @@ func (a *app) sampleDiagnostics() {
 			s.Connected++
 			if tab.highlight != nil && tab.highlight.Enabled() {
 				s.Highlighted++
+				if tab.highlight.Degraded() {
+					s.Degraded++
+				}
 			}
 		}
 		if tab.observed != nil {
