@@ -4,5 +4,6 @@
   "identifier": "dev.sshub.desktop",
   "version": "0.1.0",
   "out": "build",
+  "icon": "resources/icon.png",
   "macos": { "minimumSystemVersion": "13.0" }
 }

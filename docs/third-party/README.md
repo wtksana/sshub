@@ -18,3 +18,9 @@ Ghostty DLL 固定在 MyGo v0.9.1 的 `plugins/terminal/mygo-plugin.json` 指定
 界面使用 Lucide 的 18 个 SVG，来自官方仓库固定提交 [`f8feea7a02ea461c9f2a4b4d851512aae6ec933f`](https://github.com/lucide-icons/lucide/tree/f8feea7a02ea461c9f2a4b4d851512aae6ec933f/icons)。源文件位于 `internal/desktop/icons/lucide/`，未经修改，通过 Go embed 内嵌；MyGo 原生绘制，运行时无需访问 Iconify 或 Lucide。图标名与用途见该目录的 README。
 
 完整上游许可保存在 `Lucide-LICENSE.txt`，包含 Lucide ISC 及源自 Feather 图标的 MIT 告知。它是资源许可，不加入仅记录 Go 链接模块的 `manifest.json`；打包脚本会随本目录分发。
+
+## Devicon 应用图标
+
+应用图标使用 Iconify 的 `devicon:ssh-wordmark`，对应 Devicon 官方 [`ssh-original-wordmark.svg`](https://github.com/devicons/devicon/blob/32fe1d3b3f36ad11f90ab94f7db59738139c2bf6/icons/ssh/ssh-original-wordmark.svg)，固定提交为 `32fe1d3b3f36ad11f90ab94f7db59738139c2bf6`。原始 SVG 保存在 `resources/icon.svg`，保留原色及透明背景，使用 sharp 栅格化为 1024 × 1024 的 `resources/icon.png`；MyGo 根据 `mygo.json` 的 `icon` 配置生成并嵌入各尺寸 Windows 图标，运行时无需访问网络。
+
+上游 MIT 许可保存在 `Devicon-LICENSE.txt`，随本目录分发。
