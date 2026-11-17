@@ -21,11 +21,34 @@ type editor struct {
 
 func (a *app) beginEdit(p library.Profile) {
 	if p.ID == "" {
-		p.Port, p.Auth = 22, "agent"
+		p.Port, p.Auth = 22, "password"
 		if strings.HasPrefix(a.group, "分组：") {
 			p.Group = strings.TrimPrefix(a.group, "分组：")
 		}
 	}
+	a.startEditor(p)
+}
+
+func (a *app) beginCopy(p library.Profile) {
+	name := p.Name + " 副本"
+	for n := 2; ; n++ {
+		found := false
+		for _, existing := range a.profiles {
+			if strings.EqualFold(existing.Group, p.Group) && strings.EqualFold(existing.Name, name) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			break
+		}
+		name = fmt.Sprintf("%s 副本 %d", p.Name, n)
+	}
+	// Copy connection details explicitly, never the original credential identity.
+	a.startEditor(library.Profile{Name: name, Host: p.Host, Port: p.Port, Username: p.Username, Group: p.Group, Favorite: p.Favorite, JumpID: p.JumpID, Auth: "password"})
+}
+
+func (a *app) startEditor(p library.Profile) {
 	a.draft = editor{profile: p, port: strconv.Itoa(p.Port), auth: authLabel(p.Auth)}
 	a.draft.advanced = p.JumpID != ""
 	a.draft.jumpLabel = "不使用跳板机"
@@ -114,9 +137,9 @@ func (a *app) editorView(c *ui.Context) {
 				ui.Column(c).Width(90).Children(func() { field("profile-port", "端口", "22", &a.draft.port) })
 			})
 			field("profile-user", "用户名", "例如：root", &a.draft.profile.Username)
-			field("profile-group", "分组", "留空表示未分组", &a.draft.profile.Group)
+			formField(c, "分组", func() { a.groupInput(c, "profile-group", &a.draft.profile.Group) })
 			formField(c, "认证方式", func() {
-				ui.Select(c.Key("profile-auth"), &a.draft.auth, []string{"Windows OpenSSH Agent", "密码", "私钥文件"}).FillWidth().MinHeight(36).Radius(6)
+				ui.Select(c.Key("profile-auth"), &a.draft.auth, []string{"密码", "私钥文件", "Windows OpenSSH Agent"}).FillWidth().MinHeight(36).Radius(6)
 			})
 			if a.draft.auth == "私钥文件" {
 				field("profile-identity", "私钥路径", `C:\Users\you\.ssh\id_ed25519`, &a.draft.profile.IdentityPath)

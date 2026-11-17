@@ -8,7 +8,7 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-func (a *app) zoom(tab *workspace, steps int, reset bool) {
+func (a *app) zoom(tab *sessionTab, steps int, reset bool) {
 	_, saved := a.layout.Locate(tab.key)
 	if saved == nil {
 		return
@@ -30,7 +30,7 @@ func (a *app) zoom(tab *workspace, steps int, reset bool) {
 }
 
 func (a *app) toggleSearch() {
-	tab := a.activeWorkspace()
+	tab := a.activeTab()
 	if tab == nil || tab.term == nil {
 		return
 	}
@@ -46,7 +46,7 @@ func (a *app) toggleSearch() {
 	}
 }
 
-func (a *app) terminalSearch(c *ui.Context, tab *workspace) {
+func (a *app) terminalSearch(c *ui.Context, tab *sessionTab) {
 	key := func(s string) *ui.Context { return c.Key(fmt.Sprintf("%s-%d", s, tab.key)) }
 	ui.Row(c).FillWidth().Padding(4, 7).Gap(4).Wrap().Children(func() {
 		input := textInput(key("terminal-query"), &tab.search).Label("搜索终端输出").Placeholder("搜索输出…").Grow(1).MinWidth(80)

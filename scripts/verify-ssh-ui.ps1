@@ -66,12 +66,9 @@ try {
         if ($script:appProcess.ExitCode -ne 0) { throw 'App crashed' }
         $script:appProcess.Dispose(); $script:appProcess = $null
     }
-    function Open-Workspace {
+    function Open-Connection {
         UI press key=profile-fixture --settle | Out-Null
-        UI press key=open-workspace --settle | Out-Null
-        $id = ([regex]::Matches((Snapshot), 'key=tab-(\d+)') | ForEach-Object { [int]$_.Groups[1].Value } | Measure-Object -Maximum).Maximum
-        UI focus "key=tab-$id" --settle | Out-Null
-        UI key Ctrl+Shift+Enter --settle | Out-Null
+        UI press key=connect-profile --settle | Out-Null
     }
 
     $server = Start-Server
@@ -82,7 +79,7 @@ try {
     )} |
         ConvertTo-Json -Depth 5 | Set-Content -Encoding utf8 (Join-Path $dataDir 'connections.json')
     Start-App
-    Open-Workspace
+    Open-Connection
     Wait-Text '确认服务器身份'
     UI screenshot (Join-Path $directory 'host-confirm.png') | Out-Null
     UI press key=cancel-connection-prompt --settle | Out-Null
@@ -129,7 +126,7 @@ try {
     UI press key=toggle-files --settle | Out-Null
     UI screenshot (Join-Path $directory 'terminal-resized.png') | Out-Null
     UI press key=toggle-files --settle | Out-Null
-    $closeRef = [regex]::Match((Snapshot), '(?m)^\s*(@e\d+) \[button\] "关闭工作区 本地安全 SSH"').Groups[1].Value
+    $closeRef = [regex]::Match((Snapshot), '(?m)^\s*(@e\d+) \[button\] "关闭标签 本地安全 SSH"').Groups[1].Value
     if (!$closeRef) { throw 'Session close button missing' }
     UI press $closeRef --settle | Out-Null
     Wait-Text '关闭终端会话？'
@@ -141,7 +138,7 @@ try {
     Stop-App
 
     Start-App
-    Open-Workspace
+    Open-Connection
     Wait-Text '本地安全 SSH · 已连接'
     if ((Snapshot).Contains('connection-secret')) { throw 'Remembered credential prompted again' }
     UI press key=window-close --settle | Out-Null
@@ -149,7 +146,7 @@ try {
     UI key Escape --settle | Out-Null
     Wait-Text '本地安全 SSH · 已连接'
     UI press key=forget-credentials --settle | Out-Null
-    Wait-Text '已忘记'
+    Wait-Text '已删除'
     UI press key=disconnect-session --settle | Out-Null
     UI press key=connect-pending --settle | Out-Null
     Wait-Text '输入服务器密码'
@@ -170,8 +167,7 @@ try {
     UI press key=edit-profile --settle | Out-Null
     if ((Snapshot) -notmatch 'key=profile-jump') { throw 'Jump selection missing' }
     UI press key=cancel-profile --settle | Out-Null
-    UI press key=open-workspace --settle | Out-Null
-    UI press key=connect-pending --settle | Out-Null
+    UI press key=connect-profile --settle | Out-Null
     Wait-Text '确认服务器身份'
     UI press key=accept-connection-prompt --settle | Out-Null
     Wait-Text '输入服务器密码'

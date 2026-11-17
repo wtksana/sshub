@@ -43,8 +43,7 @@ try {
         if ($First) { UI click "key=profile-$id" --clicks 2 --settle | Out-Null }
         else {
             UI press "key=profile-$id" --settle | Out-Null
-            UI press key=open-workspace --settle | Out-Null
-            UI press key=connect-pending --settle | Out-Null
+            UI press key=connect-profile --settle | Out-Null
         }
         Wait-Text '确认服务器身份'
         UI press key=accept-connection-prompt --settle | Out-Null

@@ -15,10 +15,10 @@ func TestRestartRestoresPendingSessionsWithoutSecretsOrOutput(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	a.openWorkspace(p)
-	one := a.activeWorkspace()
-	a.openWorkspace(p)
-	two := a.activeWorkspace()
+	a.openTab(p)
+	one := a.activeTab()
+	a.openTab(p)
+	two := a.activeTab()
 	one.status, two.status = "已断开", "连接失败"
 	a.splitPane("horizontal")
 	panes := a.layout.Panes()

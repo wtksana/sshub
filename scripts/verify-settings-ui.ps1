@@ -22,7 +22,7 @@ try {
     $incoming = Join-Path $directory 'incoming.json'
     $bad = Join-Path $directory 'bad.json'
     $env:MYGO_AUTOMATION_SESSION = 'sshub-settings-' + [guid]::NewGuid().ToString('N')
-    @{version=1;profiles=@(@{id='original';name='服务器';host='example.com';port=22;username='test';auth='password';group='生产';favorite=$true})} | ConvertTo-Json -Depth 6 | Set-Content -Encoding utf8 $config
+    @{version=1;profiles=@(@{id='original';name='服务器';host='127.0.0.1';port=1;username='test';auth='password';group='生产';favorite=$true})} | ConvertTo-Json -Depth 6 | Set-Content -Encoding utf8 $config
     [IO.File]::WriteAllText($bad, '{broken')
 
     function Assert-Text([string]$value) { if (!(Get-ProductSnapshot).Contains($value)) { throw "Missing UI text: $value" } }
@@ -89,7 +89,8 @@ try {
     if ((Read-Config).preferences.theme -ne 'dark') { throw 'Theme not persisted' }
     Invoke-RawUI screenshot (Join-Path $directory 'dark.png') | Out-Null
     Invoke-RawUI press key=profile-original --settle | Out-Null
-    Invoke-ProductUI press key=open-workspace --settle | Out-Null
+    Invoke-ProductUI press key=connect-profile --settle | Out-Null
+    Wait-Text '连接失败'
     Assert-FontSize 16
     Stop-App
     Start-App
@@ -144,8 +145,7 @@ try {
     $keyID = ($doc.profiles | Where-Object name -eq '私钥服务器').id
     if (!$keyID -or $keyID -eq 'key' -or !($doc.profiles | Where-Object id -eq $keyID).identity_needs_review) { throw 'Imported private key identity unsafe' }
     Invoke-RawUI press "key=profile-$keyID" --settle | Out-Null
-    Invoke-ProductUI press key=open-workspace --settle | Out-Null
-    Invoke-ProductUI press key=connect-pending --settle | Out-Null
+    Invoke-ProductUI press key=connect-profile --settle | Out-Null
     Assert-Text '导入的私钥路径尚未核对'
     Open-ProfileMenu $keyID
     Invoke-RawUI press 'key={edit-profile}' --settle | Out-Null
@@ -166,7 +166,7 @@ try {
     if ($replaced.id -eq 'original' -or $replaced.id -eq 'incoming' -or $replaced.host -ne 'new.example.com') { throw 'Replacement identity unsafe' }
     # Original tab still uses its original snapshot during this process.
     Assert-WorkspaceCount 1 2
-    Assert-Text 'test@example.com · 字号 16'
+    Assert-Text 'test@127.0.0.1 · 字号 16'
     Invoke-RawUI screenshot (Join-Path $directory 'light.png') | Out-Null
     Stop-App
     Start-App

@@ -25,13 +25,13 @@ type fileBrowser struct {
 
 // Only the visible active session initializes its directory browser. Explicit
 // refresh remains available after an error; drawing must never cause retry loops.
-func (a *app) ensureFiles(tab *workspace) {
+func (a *app) ensureFiles(tab *sessionTab) {
 	if !a.hideRight && tab != nil && tab.client != nil && tab.files.path == "" && !tab.files.loading && tab.files.err == "" {
 		a.browse(tab, "")
 	}
 }
 
-func (a *app) browse(tab *workspace, target string) {
+func (a *app) browse(tab *sessionTab, target string) {
 	if tab.client == nil || tab.transport == nil {
 		return
 	}
@@ -77,7 +77,7 @@ func (a *app) browse(tab *workspace, target string) {
 	}()
 }
 
-func (a *app) fileOperation(tab *workspace, action func(context.Context, *connection.Files) error) {
+func (a *app) fileOperation(tab *sessionTab, action func(context.Context, *connection.Files) error) {
 	if tab.transport == nil {
 		a.actionError = "请先连接该服务器"
 		return
@@ -110,7 +110,7 @@ func (a *app) fileOperation(tab *workspace, action func(context.Context, *connec
 func (a *app) files(c *ui.Context) {
 	t := c.Theme()
 	ui.Column(c).Fill().Clip().Background(t.Surface).Padding(12).Gap(8).Children(func() {
-		tab := a.activeWorkspace()
+		tab := a.activeTab()
 		a.ensureFiles(tab)
 		status := "未连接服务器"
 		if tab != nil {
@@ -209,7 +209,7 @@ func (a *app) files(c *ui.Context) {
 	})
 }
 
-func (a *app) directoryMenu(m *ui.Menu, tab *workspace) {
+func (a *app) directoryMenu(m *ui.Menu, tab *sessionTab) {
 	enabled := tab.client != nil && tab.files.path != ""
 	if m.Item("刷新").ID("files-refresh").Disabled(tab.client == nil).Chosen() {
 		a.browse(tab, tab.files.path)
@@ -229,7 +229,7 @@ func (a *app) directoryMenu(m *ui.Menu, tab *workspace) {
 	}
 }
 
-func (a *app) entryMenu(m *ui.Menu, tab *workspace, target string, info os.FileInfo) {
+func (a *app) entryMenu(m *ui.Menu, tab *sessionTab, target string, info os.FileInfo) {
 	if m.Item("下载到…").ID("file-download").Disabled(info.Mode()&os.ModeSymlink != 0).Chosen() {
 		a.chooseDownload(tab, target)
 	}
@@ -245,7 +245,7 @@ func (a *app) entryMenu(m *ui.Menu, tab *workspace, target string, info os.FileI
 	}
 }
 
-func (a *app) chooseUpload(tab *workspace, directory bool) {
+func (a *app) chooseUpload(tab *sessionTab, directory bool) {
 	dir, attempt := tab.files.path, tab.attempt
 	go func() {
 		files, err := mygo.Dialog.Open(mygo.OpenDialogOptions{Parent: a.win, Title: "选择上传内容", Multiple: true, Directory: directory})
@@ -266,7 +266,7 @@ func (a *app) chooseUpload(tab *workspace, directory bool) {
 	}()
 }
 
-func (a *app) chooseDownload(tab *workspace, target string) {
+func (a *app) chooseDownload(tab *sessionTab, target string) {
 	attempt := tab.attempt
 	go func() {
 		dirs, err := mygo.Dialog.Open(mygo.OpenDialogOptions{Parent: a.win, Title: "选择下载目录", Directory: true, CreateDirectories: true})

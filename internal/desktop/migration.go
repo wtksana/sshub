@@ -125,7 +125,7 @@ func (a *app) commitMigration(e *migrationEditor) {
 				a.applyPreferences(a.store.Preferences(), false)
 			}
 			a.migration = nil
-			a.notice = fmt.Sprintf("已导入 %d 个连接；凭据需重新输入，私钥路径需核对。现有标签保留原配置，使用新配置请打开新工作区。", result.Count)
+			a.notice = fmt.Sprintf("已导入 %d 个连接；凭据需重新输入，私钥路径需核对。现有标签保留原配置，使用新配置请从连接列表重新连接。", result.Count)
 		})
 	}()
 }
@@ -184,7 +184,7 @@ func (a *app) migrationView(c *ui.Context) {
 			title = "导出配置"
 		}
 		ui.Text(c, title).FontSize(typeSize(c, 5)).Bold()
-		ui.Text(c, "包含连接、分组、收藏与偏好；不包含密码、口令、私钥内容、凭据引用、主机信任或工作区布局。").FontSize(typeSize(c, -2)).TextColor(t.TextMuted).Wrap()
+		ui.Text(c, "包含连接、分组、收藏与偏好；不包含密码、口令、私钥内容、凭据引用、主机信任或标签布局。").FontSize(typeSize(c, -2)).TextColor(t.TextMuted).Wrap()
 		ui.Row(c).Gap(8).FillWidth().Children(func() {
 			before := e.path
 			textInput(c.Key("migration-path"), &e.path).Label("配置文件路径").Placeholder("JSON 文件路径").Grow(1).Disabled(e.busy || e.plan != nil || e.confirmPath != "")

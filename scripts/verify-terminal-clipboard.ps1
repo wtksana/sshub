@@ -10,8 +10,7 @@ $token = 'SSHub_CLIPBOARD_中文 空格_' + [guid]::NewGuid().ToString('N')
 try {
     $env:MYGO_AUTOMATION_SESSION = $fixture.session
     Invoke-RawUI press key=profile-beta --settle | Out-Null
-    Invoke-ProductUI press key=open-workspace --settle | Out-Null
-    Invoke-ProductUI press key=connect-pending --settle | Out-Null
+    Invoke-ProductUI press key=connect-profile --settle | Out-Null
     Invoke-RawUI wait --text '集成服务器 B · 已连接' --timeout 8s --settle | Out-Null
     $tab = [int]([regex]::Matches((Get-ProductSnapshot), 'key=tab-(\d+)') | ForEach-Object { [int]$_.Groups[1].Value } | Measure-Object -Maximum).Maximum
     Invoke-RawUI wait "key=terminal-$tab" --timeout 8s --settle | Out-Null

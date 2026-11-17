@@ -33,13 +33,13 @@ func (a *app) pane(c *ui.Context, pane *layout.Node) {
 		box.Current(ui.CurrentItem)
 	}
 	box.ObserveInput(func(ui.InputEvent) { a.layout.ActivePane = pane.ID })
-	box.ContextMenu(func(m *ui.Menu) { a.paneMenu(m, pane, a.workspaceByID(pane.Active)) })
+	box.ContextMenu(func(m *ui.Menu) { a.paneMenu(m, pane, a.tabByID(pane.Active)) })
 	box.Children(func() {
 		ui.Row(c).FillWidth().Height(max(36, t.FontSize+20)).Background(t.Background).Children(func() {
 			ui.ScrollHorizontal(c.Key(fmt.Sprintf("workspace-tabs-%d", pane.ID))).Grow(1).Height(max(36, t.FontSize+20)).Children(func() {
 				ui.Row(c).Children(func() {
 					for _, saved := range pane.Tabs {
-						tab := a.workspaceByID(saved.ID)
+						tab := a.tabByID(saved.ID)
 						if tab == nil {
 							continue
 						}
@@ -71,23 +71,23 @@ func (a *app) pane(c *ui.Context, pane *layout.Node) {
 							}
 							b.OnClick(func() { a.layout.Activate(tab.key); a.terminalFocus = tab.key })
 							b.ContextMenu(func(m *ui.Menu) { a.paneMenu(m, pane, tab) })
-							iconButton(c.Key(fmt.Sprintf("close-tab-%d", tab.key)), iconClose, "关闭工作区 "+tab.profile.Name).Size(24, 24).FontSize(14).Radius(0).OnClick(func() { a.requestClose(tab) })
+							iconButton(c.Key(fmt.Sprintf("close-tab-%d", tab.key)), iconClose, "关闭标签 "+tab.profile.Name).Size(24, 24).FontSize(14).Radius(0).OnClick(func() { a.requestClose(tab) })
 						})
 					}
 				})
 			})
-			iconButton(c.Key(fmt.Sprintf("pane-menu-%d", pane.ID)), iconMore, "窗格操作").Tooltip("会话与分屏操作").Radius(0).Menu(func(m *ui.Menu) { a.paneMenu(m, pane, a.workspaceByID(pane.Active)) })
+			iconButton(c.Key(fmt.Sprintf("pane-menu-%d", pane.ID)), iconMore, "窗格操作").Tooltip("会话与分屏操作").Radius(0).Menu(func(m *ui.Menu) { a.paneMenu(m, pane, a.tabByID(pane.Active)) })
 		})
 		line := t.Border
 		if a.layout.ActivePane == pane.ID {
 			line = t.Accent
 		}
 		ui.Box(c).FillWidth().Height(1).Background(line)
-		tab := a.workspaceByID(pane.Active)
+		tab := a.tabByID(pane.Active)
 		if tab == nil {
 			ui.Column(c).Fill().Padding(24).Gap(8).Justify(ui.Center).AlignItems(ui.Center).Children(func() {
 				ui.Text(c, "打开一个连接").FontSize(typeSize(c, 3)).TextColor(t.TextMuted)
-				ui.Text(c, "双击左侧服务器，或右键选择打开工作区").FontSize(typeSize(c, -1)).TextColor(t.TextMuted).Wrap()
+				ui.Text(c, "双击左侧连接，或右键选择“连接服务器”").FontSize(typeSize(c, -1)).TextColor(t.TextMuted).Wrap()
 			})
 			return
 		}
@@ -118,7 +118,7 @@ func (a *app) pane(c *ui.Context, pane *layout.Node) {
 		a.toggleSearch()
 	}
 	if box.Shortcut(ui.Ctrl|ui.Shift, ui.KeyEnter) {
-		if tab := a.workspaceByID(pane.Active); tab != nil {
+		if tab := a.tabByID(pane.Active); tab != nil {
 			a.layout.Activate(tab.key)
 			a.connect(tab)
 		}
@@ -132,7 +132,7 @@ func (a *app) splitPane(axis string) {
 }
 
 func (a *app) moveTab() {
-	tab := a.activeWorkspace()
+	tab := a.activeTab()
 	if tab == nil {
 		return
 	}

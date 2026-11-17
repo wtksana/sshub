@@ -15,18 +15,16 @@ func (a *app) showHosts() {
 }
 
 func (a *app) sessionDialogs(c *ui.Context) {
-	message := "该工作区仍在连接或已连接，关闭后将断开并清除终端输出。"
-	buttons := []string{"取消", "关闭会话"}
 	if a.hasTabTransfers(a.closeTabID) {
-		message = "该会话有未完成传输。可以只关闭终端并继续传输，或取消传输后关闭。"
-		buttons = []string{"返回", "关闭终端并继续传输", "取消传输并关闭"}
-	}
-	choice := ui.AlertDialog(c.Key("close-session-confirm"), &a.confirmCloseTab, "关闭终端会话？", message, buttons...)
-	if choice > 0 {
-		if choice == 2 {
-			a.cancelTabTransfers(a.closeTabID)
+		choice := ui.AlertDialog(c.Key("close-session-confirm"), &a.confirmCloseTab, "关闭终端会话？", "该会话有未完成传输。可以只关闭终端并继续传输，或取消传输后关闭。", "返回", "关闭终端并继续传输", "取消传输并关闭")
+		if choice > 0 {
+			if choice == 2 {
+				a.cancelTabTransfers(a.closeTabID)
+			}
+			a.removeTab(a.closeTabID)
 		}
-		a.removeTab(a.closeTabID)
+	} else {
+		a.closeSessionDialog(c)
 	}
 	quitMessage, quitLabel := "退出将断开所有终端会话。", "断开并退出"
 	if a.hasTransfers() {
@@ -63,4 +61,53 @@ func (a *app) sessionDialogs(c *ui.Context) {
 			a.notice = "已移除主机信任记录"
 		}
 	}
+}
+
+func (a *app) closeSessionDialog(c *ui.Context) {
+	ui.DialogBase(c.Key("close-session-confirm"), &a.confirmCloseTab, func(backdrop, panel ui.Element) {
+		backdrop.Background(ui.RGBA(0, 0, 0, .35))
+		dialogStyle(c, panel, 400)
+		ui.Text(c, "关闭终端会话？").Bold().FontSize(typeSize(c, 2))
+		ui.Text(c, "该标签仍在连接或已连接，关闭后将断开并清除终端输出。").TextColor(c.Theme().TextMuted).Wrap()
+		ui.Checkbox(c.Key("close-session-remember"), &a.closeTabRemember, "以后不再提示").Disabled(a.closeTabSaving)
+		if a.closeTabError != "" {
+			ui.Text(c, a.closeTabError).TextColor(c.Theme().Danger).Wrap()
+		}
+		ui.Row(c).FillWidth().Gap(8).Justify(ui.End).Disabled(a.closeTabSaving).Children(func() {
+			ui.Button(c.Key("close-session-cancel"), "取消").OnClick(func() { a.confirmCloseTab = false })
+			ui.PrimaryButton(c.Key("close-session-accept"), "关闭会话").OnClick(a.acceptSessionClose)
+		})
+	})
+	if a.closeTabSaving {
+		a.confirmCloseTab = true
+	}
+}
+
+func (a *app) acceptSessionClose() {
+	if a.closeTabSaving {
+		return
+	}
+	if !a.closeTabRemember {
+		a.confirmCloseTab = false
+		a.removeTab(a.closeTabID)
+		return
+	}
+	key, p := a.closeTabID, a.preferences
+	p.SkipCloseConfirmation = true
+	a.closeTabSaving, a.closeTabError = true, ""
+	go func() {
+		err := a.store.SavePreferences(p)
+		a.dispatch(func() { a.finishSessionClose(key, err) })
+	}()
+}
+
+func (a *app) finishSessionClose(key int, err error) {
+	a.closeTabSaving = false
+	if err != nil {
+		a.closeTabError = "无法保存提示偏好：" + err.Error()
+		return
+	}
+	a.preferences.SkipCloseConfirmation = true
+	a.confirmCloseTab = false
+	a.removeTab(key)
 }

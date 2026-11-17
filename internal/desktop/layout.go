@@ -13,7 +13,7 @@ func (a *app) restoreLayout() {
 	a.layoutStore, a.layout = store, state
 	if err != nil {
 		a.layoutReadOnly = true
-		a.actionError = "无法读取工作区布局，原文件已保留；本次布局不会保存。请将数据目录中的 workspace.json 重命名后重启。"
+		a.actionError = "无法读取标签布局，原文件已保留；本次布局不会保存。请将数据目录中的 workspace.json 重命名后重启。"
 	}
 	dropped := a.layout.Prune(func(id string) bool {
 		for _, p := range a.profiles {
@@ -31,13 +31,13 @@ func (a *app) restoreLayout() {
 		for _, tab := range pane.Tabs {
 			for _, p := range a.profiles {
 				if p.ID == tab.ProfileID {
-					a.tabs = append(a.tabs, a.newWorkspace(tab.ID, p))
+					a.tabs = append(a.tabs, a.newTab(tab.ID, p))
 					break
 				}
 			}
 		}
 	}
-	if current := a.activeWorkspace(); current != nil {
+	if current := a.activeTab(); current != nil {
 		a.selected = current.profile.ID
 	}
 	a.layoutQueue, a.layoutDone = make(chan []byte, 1), make(chan struct{})
@@ -87,8 +87,8 @@ func (a *app) writeLayouts() {
 			return
 		}
 		if err := a.layoutStore.Save(pending); err != nil {
-			log.Print("保存工作区布局失败：", err)
-			a.dispatch(func() { a.actionError = "保存工作区布局失败，已有文件未被覆盖：" + err.Error() })
+			log.Print("保存标签布局失败：", err)
+			a.dispatch(func() { a.actionError = "保存标签布局失败，已有文件未被覆盖：" + err.Error() })
 		}
 		pending = nil
 	}

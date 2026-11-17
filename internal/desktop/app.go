@@ -29,7 +29,7 @@ type app struct {
 	editGeneration                       int
 	draft                                editor
 	deleteID, deleteName                 string
-	tabs                                 []*workspace
+	tabs                                 []*sessionTab
 	layout                               *layout.State
 	layoutStore                          *layout.Store
 	layoutQueue                          chan []byte
@@ -48,6 +48,9 @@ type app struct {
 	promptGeneration                     int
 	closeTabID                           int
 	confirmCloseTab                      bool
+	closeTabRemember, closeTabSaving     bool
+	closeTabError                        string
+	groupEdit                            *profileGroupEditor
 	confirmQuit, allowQuit               bool
 	manageHosts                          bool
 	hosts                                []connection.HostIdentity
@@ -139,7 +142,7 @@ func (a *app) selectedProfile() (library.Profile, bool) {
 	return a.profiles[i], true
 }
 
-func (a *app) openWorkspace(p library.Profile) *workspace {
+func (a *app) openTab(p library.Profile) *sessionTab {
 	if err := a.store.MarkUsed(p.ID); err != nil {
 		a.actionError = err.Error()
 		return nil
@@ -150,15 +153,15 @@ func (a *app) openWorkspace(p library.Profile) *workspace {
 		a.actionError = err.Error()
 		return nil
 	}
-	tab := a.newWorkspace(id, p)
+	tab := a.newTab(id, p)
 	a.setDefaultFontSize(id)
 	a.tabs = append(a.tabs, tab)
 	a.actionError = ""
 	return tab
 }
 
-func (a *app) newWorkspace(id int, p library.Profile) *workspace {
-	tab := &workspace{key: id, profile: p, status: "待连接"}
+func (a *app) newTab(id int, p library.Profile) *sessionTab {
+	tab := &sessionTab{key: id, profile: p, status: "待连接"}
 	if p.JumpID != "" {
 		if i := slices.IndexFunc(a.profiles, func(v library.Profile) bool { return v.ID == p.JumpID }); i >= 0 {
 			jump := a.profiles[i]

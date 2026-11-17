@@ -16,13 +16,13 @@ import (
 )
 
 type fileEditor struct {
-	tab                      *workspace
+	tab                      *sessionTab
 	attempt                  int
 	kind, target, value, err string
 	info                     os.FileInfo
 }
 
-func (a *app) editFile(tab *workspace, kind, target string, info os.FileInfo) {
+func (a *app) editFile(tab *sessionTab, kind, target string, info os.FileInfo) {
 	e := &fileEditor{tab: tab, attempt: tab.attempt, kind: kind, target: target, info: info}
 	if kind == "rename" {
 		e.value = path.Base(target)
@@ -138,7 +138,7 @@ func (a *app) cancelConflict(p *fileConflict) {
 	a.transferConflict = nil
 }
 
-func (a *app) download(tab *workspace, target, localDir string) {
+func (a *app) download(tab *sessionTab, target, localDir string) {
 	name := path.Base(target)
 	if !connection.ValidName(name) || !filepath.IsLocal(name) || strings.Contains(name, ":") {
 		a.actionError = "无法安全地保存该文件名"

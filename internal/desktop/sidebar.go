@@ -67,7 +67,7 @@ func (a *app) sidebar(c *ui.Context) {
 			row.ContextMenu(func(m *ui.Menu) { a.profileMenu(m, p) })
 			if row.DoubleClicked() {
 				a.selected = p.ID
-				if tab := a.openWorkspace(p); tab != nil {
+				if tab := a.openTab(p); tab != nil {
 					a.connect(tab)
 				}
 			}

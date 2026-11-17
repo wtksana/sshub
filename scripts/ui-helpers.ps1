@@ -32,7 +32,7 @@ function Invoke-ProductUI {
     $commandArgs = @($args)
     if ($commandArgs.Count -ge 2 -and $commandArgs[0] -eq 'press' -and $commandArgs[1] -like 'key=*') {
         $key = $commandArgs[1].Substring(4)
-        if ($key -match '^(open-workspace|edit-profile|favorite-profile|delete-profile)$') {
+        if ($key -match '^(connect-profile|edit-profile|copy-profile|favorite-profile|forget-profile-credentials|delete-profile)$') {
             Open-ProfileMenu
         } elseif ($key -match '^(manage-hosts)$') {
             Invoke-RawUI press key=app-menu --settle | Out-Null

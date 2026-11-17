@@ -11,17 +11,16 @@ import (
 func (a *app) profileMenu(m *ui.Menu, p library.Profile) {
 	if m.Item("连接服务器").ID("connect-profile").Chosen() {
 		a.selected = p.ID
-		if tab := a.openWorkspace(p); tab != nil {
+		if tab := a.openTab(p); tab != nil {
 			a.connect(tab)
 		}
-	}
-	if m.Item("打开工作区").ID("open-workspace").Chosen() {
-		a.selected = p.ID
-		a.openWorkspace(p)
 	}
 	m.Separator()
 	if m.Item("编辑连接…").ID("edit-profile").Chosen() {
 		a.beginEdit(p)
+	}
+	if m.Item("复制连接…").ID("copy-profile").Chosen() {
+		a.beginCopy(p)
 	}
 	label := "收藏"
 	if p.Favorite {
@@ -30,7 +29,8 @@ func (a *app) profileMenu(m *ui.Menu, p library.Profile) {
 	if m.Item(label).ID("favorite-profile").Chosen() {
 		a.favorite(p)
 	}
-	if m.Item("忘记凭据").ID("forget-profile-credentials").Chosen() {
+	m.Submenu("分组", func(m *ui.Menu) { a.profileGroupMenu(m, p) })
+	if m.Item("删除凭据").ID("forget-profile-credentials").Chosen() {
 		a.forgetCredentials(p)
 	}
 	m.Separator()
@@ -39,7 +39,7 @@ func (a *app) profileMenu(m *ui.Menu, p library.Profile) {
 	}
 }
 
-func (a *app) paneMenu(m *ui.Menu, pane *layout.Node, tab *workspace) {
+func (a *app) paneMenu(m *ui.Menu, pane *layout.Node, tab *sessionTab) {
 	activate := func() {
 		a.layout.ActivePane = pane.ID
 		if tab != nil {
@@ -104,7 +104,7 @@ func (a *app) paneMenu(m *ui.Menu, pane *layout.Node, tab *workspace) {
 	}
 	if tab != nil {
 		m.Separator()
-		if m.Item("忘记凭据").ID("forget-credentials").Disabled(tab.status == "连接中").Chosen() {
+		if m.Item("删除凭据").ID("forget-credentials").Disabled(tab.status == "连接中").Chosen() {
 			a.forgetCredentials(tab.profile)
 		}
 		if m.Item("关闭会话").ID("close-session").Chosen() {

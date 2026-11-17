@@ -18,9 +18,9 @@ func TestDefaultFontAndPerTabZoom(t *testing.T) {
 		t.Fatal(err)
 	}
 	a.applyPreferences(prefs, false)
-	one := a.openWorkspace(p)
+	one := a.openTab(p)
 	a.zoom(one, 2, false)
-	two := a.openWorkspace(p)
+	two := a.openTab(p)
 	prefs.FontSize = 15
 	prefs.UIFontSize, prefs.UIFontFamily = 20, "Microsoft YaHei UI"
 	if err = a.store.SavePreferences(prefs); err != nil {
@@ -52,7 +52,7 @@ func TestImportedPrivateKeysBlockedUntilReviewed(t *testing.T) {
 	for _, viaJump := range []bool{false, true} {
 		a := newApp(t.TempDir())
 		p := library.Profile{ID: "key", Name: "key", Host: "127.0.0.1", Port: 1, Username: "test", Auth: "private_key", IdentityPath: `C:\keys\key`, IdentityNeedsReview: true}
-		tab := &workspace{profile: p, status: "待连接"}
+		tab := &sessionTab{profile: p, status: "待连接"}
 		if viaJump {
 			tab.profile = library.Profile{Auth: "password"}
 			tab.jump = &p
@@ -91,7 +91,7 @@ func TestImportReplacementPreservesSessionsAndCredentialIsolation(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	tab := a.openWorkspace(p)
+	tab := a.openTab(p)
 	m := library.Migration{Format: "sshub", Version: 1, Profiles: []library.PortableProfile{{ID: p.ID, Name: p.Name, Host: p.Host, Port: p.Port, Username: p.Username, Auth: p.Auth}}}
 	plan, err := a.store.PreviewImport(m)
 	if err != nil {
@@ -119,7 +119,7 @@ func TestFilePanelDefaultsAndReleaseReset(t *testing.T) {
 	if !a.hideRight {
 		t.Fatal("new workspace should start without SFTP panel")
 	}
-	tab := &workspace{files: fileBrowser{path: "/old", input: "/old", err: "old failure", loading: true, generation: 3}}
+	tab := &sessionTab{files: fileBrowser{path: "/old", input: "/old", err: "old failure", loading: true, generation: 3}}
 	a.release(tab)
 	if tab.files.path != "" || tab.files.err != "" || tab.files.loading || tab.files.generation <= 3 {
 		t.Fatal("reconnection retained directory state")

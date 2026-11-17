@@ -47,7 +47,7 @@ func TestQueuedUploadsKeepServerAndPathAfterFocusAndProfileChanges(t *testing.T)
 		if err != nil {
 			t.Fatal(err)
 		}
-		a.tabs = append(a.tabs, &workspace{key: id, client: client, transport: transport,
+		a.tabs = append(a.tabs, &sessionTab{key: id, client: client, transport: transport,
 			profile: library.Profile{ID: s.Address(), Name: s.Address()}, files: fileBrowser{path: "/"}})
 	}
 	source := filepath.Join(t.TempDir(), "中文 上传.txt")
@@ -60,7 +60,7 @@ func TestQueuedUploadsKeepServerAndPathAfterFocusAndProfileChanges(t *testing.T)
 	first.profile = second.profile
 	first.files.path = "/changed-after-enqueue"
 	a.layout.Activate(second.key)
-	if a.activeWorkspace() != second {
+	if a.activeTab() != second {
 		t.Fatal("focus did not switch")
 	}
 	task := <-a.transferQueue

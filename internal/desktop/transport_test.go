@@ -39,7 +39,7 @@ func TestClosingTerminalKeepsTransferTransportUntilLastOwner(t *testing.T) {
 	if !transport.retain() {
 		t.Fatal("retain transfer")
 	}
-	tab := &workspace{client: c, transport: transport, shell: shell, status: "已连接"}
+	tab := &sessionTab{client: c, transport: transport, shell: shell, status: "已连接"}
 	a := &app{}
 	a.release(tab)
 	f, err := c.OpenFiles(ctx)

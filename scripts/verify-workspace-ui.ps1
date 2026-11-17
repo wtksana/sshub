@@ -71,9 +71,8 @@ try {
             UI click "key=profile-$profileID" --clicks 2 --settle | Out-Null
         } else {
             UI press "key=profile-$profileID" --settle | Out-Null
-            UI press key=open-workspace --settle | Out-Null
+            UI press key=connect-profile --settle | Out-Null
         }
-        if ($tabs.Count -ne 0) { UI press key=connect-pending --settle | Out-Null }
         if (!$trusted.ContainsKey($profileID)) {
             Wait-Text '确认服务器身份'
             UI press key=accept-connection-prompt --settle | Out-Null
@@ -249,7 +248,7 @@ try {
     $external = '{external-workspace-change'
     [IO.File]::WriteAllText((Join-Path $dataDir 'workspace.json'), $external, [Text.UTF8Encoding]::new($false))
     UI press key=toggle-files --settle | Out-Null
-    Wait-Text '保存工作区布局失败'
+    Wait-Text '保存标签布局失败'
     Stop-App
     if ([IO.File]::ReadAllText((Join-Path $dataDir 'workspace.json')) -ne $external) { throw 'External layout overwritten' }
 
@@ -257,7 +256,7 @@ try {
     $path = Join-Path $dataDir 'workspace.json'; $bad = '{broken-workspace'
     [IO.File]::WriteAllText($path, $bad, [Text.UTF8Encoding]::new($false))
     Start-App
-    Wait-Text '无法读取工作区布局'
+    Wait-Text '无法读取标签布局'
     UI press key=toggle-connections --settle | Out-Null
     if (!(Snapshot).Contains('2 / 2 条连接')) { UI press key=toggle-connections --settle | Out-Null }
     Assert-Text '2 / 2 条连接'

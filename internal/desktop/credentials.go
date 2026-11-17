@@ -34,7 +34,7 @@ func (a *app) forgetCredentials(p library.Profile) {
 			if first != nil {
 				a.actionError = "清除系统凭据失败：" + first.Error()
 			} else {
-				a.notice = fmt.Sprintf("已忘记“%s”的已保存凭据", p.Name)
+				a.notice = fmt.Sprintf("已删除“%s”的已保存凭据", p.Name)
 			}
 		})
 	}()

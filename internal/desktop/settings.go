@@ -111,6 +111,9 @@ func (a *app) settingsView(c *ui.Context) {
 			})
 			ui.Text(c, "使用本机已安装字体；缺失字符由系统回退显示。").FontSize(typeSize(c, -2)).TextColor(t.TextMuted).Wrap()
 			ui.Checkbox(c.Key("settings-reset-tabs"), &e.resetTabs, "同时将现有标签字号设为默认")
+			ui.Divider(c)
+			ui.Text(c, "会话").Bold()
+			ui.Checkbox(c.Key("settings-skip-close-confirmation"), &e.preferences.SkipCloseConfirmation, "关闭终端会话时不再提示")
 		})
 		if e.err != "" {
 			ui.Text(c, e.err).TextColor(t.Danger).Wrap()

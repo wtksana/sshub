@@ -7,11 +7,12 @@ import (
 )
 
 type Preferences struct {
-	Theme        string `json:"theme"`
-	FontFamily   string `json:"font_family"`
-	FontSize     int    `json:"font_size"`
-	UIFontFamily string `json:"ui_font_family,omitempty"`
-	UIFontSize   int    `json:"ui_font_size,omitempty"`
+	Theme                 string `json:"theme"`
+	FontFamily            string `json:"font_family"`
+	FontSize              int    `json:"font_size"`
+	UIFontFamily          string `json:"ui_font_family,omitempty"`
+	UIFontSize            int    `json:"ui_font_size,omitempty"`
+	SkipCloseConfirmation bool   `json:"skip_close_confirmation,omitempty"`
 }
 
 func DefaultPreferences() Preferences {

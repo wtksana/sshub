@@ -15,7 +15,7 @@ import (
 	"sshub/internal/transfer"
 )
 
-type workspace struct {
+type sessionTab struct {
 	key                     int
 	profile                 library.Profile
 	jump                    *library.Profile
@@ -44,14 +44,14 @@ func (a *app) dispatch(fn func()) {
 	}
 }
 
-func (a *app) activeWorkspace() *workspace {
+func (a *app) activeTab() *sessionTab {
 	if a.layout == nil || a.layout.Current() == nil {
 		return nil
 	}
-	return a.workspaceByID(a.layout.Current().Active)
+	return a.tabByID(a.layout.Current().Active)
 }
 
-func (a *app) workspaceByID(id int) *workspace {
+func (a *app) tabByID(id int) *sessionTab {
 	for _, tab := range a.tabs {
 		if tab.key == id {
 			return tab
@@ -60,9 +60,9 @@ func (a *app) workspaceByID(id int) *workspace {
 	return nil
 }
 
-func busy(tab *workspace) bool { return tab.status == "连接中" || tab.status == "已连接" }
+func busy(tab *sessionTab) bool { return tab.status == "连接中" || tab.status == "已连接" }
 
-func (a *app) release(tab *workspace) {
+func (a *app) release(tab *sessionTab) {
 	tab.attempt++
 	if tab.files.cancel != nil {
 		tab.files.cancel()
@@ -85,7 +85,7 @@ func (a *app) release(tab *workspace) {
 	tab.client = nil
 }
 
-func (a *app) disconnect(tab *workspace) {
+func (a *app) disconnect(tab *sessionTab) {
 	tab.retryRequests = nil
 	a.release(tab)
 	tab.status, tab.err = "已断开", ""
@@ -102,24 +102,25 @@ func (a *app) removeTab(key int) {
 			}
 		}
 	}
-	a.tabs = slices.DeleteFunc(a.tabs, func(v *workspace) bool { return v.key == key })
+	a.tabs = slices.DeleteFunc(a.tabs, func(v *sessionTab) bool { return v.key == key })
 	a.layout.Close(key)
 }
 
-func (a *app) requestClose(tab *workspace) {
-	if busy(tab) || a.hasTabTransfers(tab.key) {
+func (a *app) requestClose(tab *sessionTab) {
+	if (busy(tab) && !a.preferences.SkipCloseConfirmation) || a.hasTabTransfers(tab.key) {
 		a.closeTabID, a.confirmCloseTab = tab.key, true
+		a.closeTabRemember, a.closeTabError = false, ""
 		return
 	}
 	a.removeTab(tab.key)
 }
 
-func (a *app) connect(tab *workspace) {
+func (a *app) connect(tab *sessionTab) {
 	if busy(tab) {
 		return
 	}
 	if tab.profile.IdentityNeedsReview || (tab.jump != nil && tab.jump.IdentityNeedsReview) {
-		tab.status, tab.err = "连接失败", "导入的私钥路径尚未核对，请编辑目标或跳板机连接并确认本机私钥路径，然后打开新工作区"
+		tab.status, tab.err = "连接失败", "导入的私钥路径尚未核对，请编辑目标或跳板机连接并确认本机私钥路径，然后从连接列表重新连接"
 		tab.retryRequests = nil
 		return
 	}
@@ -238,7 +239,7 @@ func (a *app) connect(tab *workspace) {
 	}()
 }
 
-func (a *app) connectionFailed(tab *workspace, attempt int, err error) {
+func (a *app) connectionFailed(tab *sessionTab, attempt int, err error) {
 	a.dispatch(func() {
 		if tab.attempt != attempt {
 			return

@@ -86,7 +86,7 @@ func (a *app) cancelTransfer(task *transferTask) {
 	}
 }
 
-func (a *app) enqueue(tab *workspace, request transfer.Request, batch *transferBatch) {
+func (a *app) enqueue(tab *sessionTab, request transfer.Request, batch *transferBatch) {
 	if tab == nil || tab.transport == nil || !tab.transport.retain() {
 		a.actionError = "请先连接该服务器"
 		return
@@ -104,7 +104,7 @@ func (a *app) enqueue(tab *workspace, request transfer.Request, batch *transferB
 	}
 }
 
-func (a *app) upload(tab *workspace, dir string, files []string) {
+func (a *app) upload(tab *sessionTab, dir string, files []string) {
 	batch := &transferBatch{}
 	for _, file := range files {
 		a.enqueue(tab, transfer.Request{Upload: true, Source: file, Destination: path.Join(dir, filepath.Base(file))}, batch)
@@ -120,14 +120,14 @@ func (a *app) runTransfers() {
 }
 
 func (a *app) retryTransfer(task *transferTask) {
-	tab := a.workspaceByID(task.tabID)
+	tab := a.tabByID(task.tabID)
 	if tab == nil {
 		id, err := a.layout.Add(task.profile.ID)
 		if err != nil {
 			a.actionError = err.Error()
 			return
 		}
-		tab = &workspace{key: id, profile: task.profile, jump: task.jump, status: "待连接"}
+		tab = &sessionTab{key: id, profile: task.profile, jump: task.jump, status: "待连接"}
 		a.setDefaultFontSize(id)
 		a.tabs = append(a.tabs, tab)
 	}
@@ -198,7 +198,7 @@ func (a *app) runTransfer(task *transferTask) {
 				task.status = "已取消"
 			}
 		}
-		if tab := a.workspaceByID(task.tabID); tab != nil && tab.client != nil {
+		if tab := a.tabByID(task.tabID); tab != nil && tab.client != nil {
 			a.browse(tab, tab.files.path)
 		}
 		a.pruneTransferHistory()

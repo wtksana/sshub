@@ -61,6 +61,7 @@ try {
     }
     function Fill-NewProfile([string]$name, [string]$hostName, [string]$groupName) {
         Invoke-UI press key=new-profile --settle | Out-Null
+        Assert-Text '密码'
         Invoke-UI fill key=profile-name $name | Out-Null
         Invoke-UI fill key=profile-host $hostName | Out-Null
         Invoke-UI fill key=profile-user deploy | Out-Null
@@ -70,19 +71,25 @@ try {
 
     Start-TestApp
     Assert-Text '0 / 0 条连接'
-    Fill-NewProfile '香港生产服务器' '192.0.2.10' '生产'
+    Fill-NewProfile '香港生产服务器' '127.0.0.1' '生产'
     Invoke-UI fill key=profile-port '70000' | Out-Null
     Invoke-UI press key=save-profile --settle | Out-Null
     Assert-Text '端口必须为 1–65535'
-    Invoke-UI fill key=profile-port '2222' | Out-Null
+    Invoke-UI fill key=profile-port '1' | Out-Null
     Choose-Option 'profile-auth' '密码'
     Invoke-UI press key=profile-favorite | Out-Null
     Invoke-UI press key=save-profile --settle | Out-Null
     Assert-Absent 'key=edit-profile'
-    Assert-Text 'deploy@192.0.2.10:2222'
-    Open-ProfileMenu; Assert-Text '取消收藏'; Invoke-RawUI key Escape --settle | Out-Null
-    Invoke-UI press key=open-workspace --settle | Out-Null
-    Assert-Text '香港生产服务器 · 待连接'
+    Assert-Text 'deploy@127.0.0.1:1'
+    Open-ProfileMenu
+    Assert-Text '取消收藏'
+    Assert-Text '复制连接'
+    Assert-Text '删除凭据'
+    Assert-Absent '打开工作区'
+    Invoke-UI screenshot (Join-Path $directory 'connection-menu.png') | Out-Null
+    Invoke-RawUI key Escape --settle | Out-Null
+    Invoke-UI press key=connect-profile --settle | Out-Null
+    Invoke-UI wait --text '连接失败' --timeout 8s --settle | Out-Null
     Open-PaneMenu
     if ((Get-ProductSnapshot) -notmatch '\[menuItem\] "连接"') { throw 'Connection menu missing' }
     Invoke-RawUI key Escape --settle | Out-Null
@@ -101,6 +108,48 @@ try {
     $firstID = ($doc.profiles | Where-Object name -eq '香港生产服务器').id
     $secondID = ($doc.profiles | Where-Object name -eq '测试机').id
     if (!$firstID -or !$secondID) { throw 'Saved connection IDs missing' }
+    Open-ProfileMenu $secondID
+    Invoke-RawUI press 'key={copy-profile}' --settle | Out-Null
+    Assert-Text '新建连接'
+    Assert-Text 'value="测试机 副本"'
+    Assert-Text 'value="192.0.2.20"'
+    Assert-Text '密码'
+    Assert-Absent 'key=profile-identity'
+    Invoke-UI screenshot (Join-Path $directory 'copy-connection.png') | Out-Null
+    Invoke-UI press key=save-profile --settle | Out-Null
+    $copied = (Get-Content -Raw $configPath | ConvertFrom-Json).profiles | Where-Object name -eq '测试机 副本'
+    if (!$copied -or $copied.id -eq $secondID -or $copied.auth -ne 'password' -or $copied.identity_path) { throw 'Copied connection inherited authentication' }
+    Open-ProfileMenu $copied.id
+    Invoke-RawUI press 'key={delete-profile}' --settle | Out-Null
+    $deleteRef = [regex]::Match((Read-UI), '(?m)^\s*(@e\d+) \[button\] "删除配置"').Groups[1].Value
+    Invoke-UI press $deleteRef --settle | Out-Null
+    Assert-Text '2 / 2 条连接'
+    Open-ProfileMenu $secondID
+    Open-UISubmenu '分组'
+    $groupRef = [regex]::Match((Read-UI), '(?m)^\s*(@e\d+) \[menuItemRadio\] "生产"').Groups[1].Value
+    if (!$groupRef) { throw 'Existing group option missing' }
+    Invoke-RawUI press $groupRef --settle | Out-Null
+    if (((Get-Content -Raw $configPath | ConvertFrom-Json).profiles | Where-Object id -eq $secondID).group -ne '生产') { throw 'Context group move failed' }
+    Open-ProfileMenu $secondID
+    Open-UISubmenu '分组'
+    Invoke-RawUI press 'key={profile-group-new}' --settle | Out-Null
+    Invoke-UI fill key=quick-group '新建分组' --settle | Out-Null
+    Invoke-UI press key=quick-group-save --settle | Out-Null
+    if (((Get-Content -Raw $configPath | ConvertFrom-Json).profiles | Where-Object id -eq $secondID).group -ne '新建分组') { throw 'New context group failed' }
+    Open-ProfileMenu $secondID
+    Open-UISubmenu '分组'
+    Invoke-RawUI press 'key={profile-group-none}' --settle | Out-Null
+    if (((Get-Content -Raw $configPath | ConvertFrom-Json).profiles | Where-Object id -eq $secondID).group) { throw 'Ungroup failed' }
+    Open-ProfileMenu $secondID
+    Invoke-RawUI press 'key={edit-profile}' --settle | Out-Null
+    Invoke-UI press key=profile-group-options --settle | Out-Null
+    Assert-Text '[listItem] "生产"'
+    Invoke-UI screenshot (Join-Path $directory 'group-options.png') | Out-Null
+    Choose-Option 'profile-group' '生产'
+    Invoke-UI screenshot (Join-Path $directory 'group-combobox.png') | Out-Null
+    Invoke-UI fill key=profile-group '测试' --settle | Out-Null
+    Invoke-UI press key=save-profile --settle | Out-Null
+    if (((Get-Content -Raw $configPath | ConvertFrom-Json).profiles | Where-Object id -eq $secondID).group -ne '测试') { throw 'Typed group was not saved' }
     # Editing an unselected row by right-click must target that row.
     Open-ProfileMenu $firstID
     Invoke-RawUI press 'key={edit-profile}' --settle | Out-Null
@@ -131,9 +180,9 @@ try {
     Assert-Text '0 / 2 条连接'
     Invoke-UI press key=scope- --settle | Out-Null
     Invoke-UI press key=toggle-files --settle | Out-Null
-    Assert-Absent '传输队列'
-    Invoke-UI press key=toggle-files --settle | Out-Null
     Assert-Text '传输队列'
+    Invoke-UI press key=toggle-files --settle | Out-Null
+    Assert-Absent '传输队列'
     Invoke-UI press key=toggle-connections --settle | Out-Null
     Assert-Absent 'key=search-profiles'
     Invoke-UI press key=toggle-connections --settle | Out-Null
@@ -142,9 +191,9 @@ try {
     Invoke-UI key Ctrl+B --settle | Out-Null
     Assert-Text 'key=search-profiles'
     Invoke-UI key Ctrl+Shift+E --settle | Out-Null
-    Assert-Absent '传输队列'
-    Invoke-UI key Ctrl+Shift+E --settle | Out-Null
     Assert-Text '传输队列'
+    Invoke-UI key Ctrl+Shift+E --settle | Out-Null
+    Assert-Absent '传输队列'
     Stop-TestApp
 
     Start-TestApp
@@ -191,7 +240,7 @@ try {
     $badBytes = [Text.Encoding]::UTF8.GetBytes('{broken-config')
     [IO.File]::WriteAllBytes($configPath, $badBytes)
     Start-TestApp
-    Assert-Text '无法读取连接库'
+    Assert-Text '无法读取连接配置'
     Assert-Absent 'key=new-profile'
     Invoke-UI screenshot (Join-Path $directory 'invalid-config.png') | Out-Null
     Stop-TestApp
