@@ -22,8 +22,12 @@ func (a *app) setDefaultFontSize(id int) {
 }
 
 func (a *app) applyPreferences(p library.Preferences, resetTabs bool) {
-	a.preferences = p
+	a.preferences = p.Clone()
+	rules := compileHighlightPreferences(p)
 	for _, tab := range a.tabs {
+		if tab.highlight != nil {
+			tab.highlight.SetRules(rules)
+		}
 		if resetTabs {
 			a.setDefaultFontSize(tab.key)
 		}
@@ -34,7 +38,7 @@ func (a *app) applyPreferences(p library.Preferences, resetTabs bool) {
 }
 
 func (a *app) saveSettings(e *settingsEditor) {
-	p := e.preferences
+	p := e.preferences.Clone()
 	size, err := strconv.Atoi(strings.TrimSpace(e.size))
 	if err != nil {
 		e.err = "终端默认字号必须为 8–32 的整数"
@@ -74,6 +78,10 @@ func (a *app) settingsView(c *ui.Context) {
 		return
 	}
 	e.preferences.ScrollbackMiB = e.preferences.EffectiveScrollbackMiB()
+	if e.preferences.LogHighlight == nil {
+		config := e.preferences.EffectiveLogHighlight()
+		e.preferences.LogHighlight = &config
+	}
 	open := true
 	ui.DialogBase(c.Key("settings-dialog"), &open, func(backdrop, panel ui.Element) {
 		t := c.Theme()
@@ -123,6 +131,7 @@ func (a *app) settingsView(c *ui.Context) {
 			ui.Divider(c)
 			ui.Text(c, "会话").Bold()
 			ui.Checkbox(c.Key("settings-skip-close-confirmation"), &e.preferences.SkipCloseConfirmation, "关闭终端会话时不再提示")
+			highlightSettingsView(c, e.preferences.LogHighlight)
 		})
 		if e.err != "" {
 			ui.Text(c, e.err).TextColor(t.Danger).Wrap()

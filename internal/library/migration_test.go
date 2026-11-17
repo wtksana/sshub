@@ -25,7 +25,7 @@ func bundle(profiles ...PortableProfile) Migration {
 func TestPreferencesSurviveCRUDAndRestart(t *testing.T) {
 	dir := t.TempDir()
 	s := openTestStore(t, dir)
-	if s.Preferences() != DefaultPreferences() {
+	if !reflect.DeepEqual(s.Preferences(), DefaultPreferences()) {
 		t.Fatal("legacy defaults missing")
 	}
 	prefs := Preferences{Theme: "dark", FontFamily: "Consolas", FontSize: 17}
@@ -48,11 +48,11 @@ func TestPreferencesSurviveCRUDAndRestart(t *testing.T) {
 	}
 	s.Close()
 	s = openTestStore(t, dir)
-	if s.Preferences() != prefs {
+	if !reflect.DeepEqual(s.Preferences(), prefs) {
 		t.Fatal("CRUD lost preferences")
 	}
 	for _, bad := range []Preferences{{Theme: "unknown", FontFamily: "x", FontSize: 13}, {Theme: "dark", FontSize: 13}, {Theme: "dark", FontFamily: "x\n", FontSize: 13}, {Theme: "dark", FontFamily: "x", FontSize: 33}} {
-		if s.SavePreferences(bad) == nil || s.Preferences() != prefs {
+		if s.SavePreferences(bad) == nil || !reflect.DeepEqual(s.Preferences(), prefs) {
 			t.Fatal("invalid prefs changed store")
 		}
 	}
@@ -267,7 +267,7 @@ func TestImportFailuresAreAtomic(t *testing.T) {
 				t.Fatal("expected failure")
 			}
 			after, _ := os.ReadFile(s.path)
-			if !bytes.Equal(before, after) || !reflect.DeepEqual(profiles, s.Profiles()) || prefs != s.Preferences() {
+			if !bytes.Equal(before, after) || !reflect.DeepEqual(profiles, s.Profiles()) || !reflect.DeepEqual(prefs, s.Preferences()) {
 				t.Fatal("failed import changed data")
 			}
 		})

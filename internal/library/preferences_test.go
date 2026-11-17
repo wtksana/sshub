@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"os"
+	"reflect"
 	"testing"
 )
 
@@ -25,7 +26,7 @@ func TestSeparateFontsRoundTripAndLegacyDefaults(t *testing.T) {
 	}
 	store.Close()
 	store = openTestStore(t, dir)
-	if store.Preferences() != prefs {
+	if !reflect.DeepEqual(store.Preferences(), prefs) {
 		t.Fatal("separate fonts did not survive restart")
 	}
 	data, err := store.Export()
@@ -44,7 +45,7 @@ func TestSeparateFontsRoundTripAndLegacyDefaults(t *testing.T) {
 	if _, err = other.CommitImport(plan, nil, true); err != nil {
 		t.Fatal(err)
 	}
-	if other.Preferences() != prefs {
+	if !reflect.DeepEqual(other.Preferences(), prefs) {
 		t.Fatal("migration lost separate fonts")
 	}
 	for _, bad := range []Preferences{
@@ -52,7 +53,7 @@ func TestSeparateFontsRoundTripAndLegacyDefaults(t *testing.T) {
 		{Theme: "light", FontFamily: "Consolas", FontSize: 13, UIFontSize: 21},
 		{Theme: "light", FontFamily: "Consolas", FontSize: 13, UIFontFamily: "bad\nfont"},
 	} {
-		if store.SavePreferences(bad) == nil || store.Preferences() != prefs {
+		if store.SavePreferences(bad) == nil || !reflect.DeepEqual(store.Preferences(), prefs) {
 			t.Fatal("invalid UI font settings changed saved preferences")
 		}
 	}
@@ -76,7 +77,7 @@ func TestScrollbackLegacyDefaultsAndRoundTrip(t *testing.T) {
 		}
 		store.Close()
 		store = openTestStore(t, dir)
-		if got := store.Preferences(); got != prefs || got.EffectiveScrollbackMiB() != capacity {
+		if got := store.Preferences(); !reflect.DeepEqual(got, prefs) || got.EffectiveScrollbackMiB() != capacity {
 			t.Fatal("scrollback lost after restart", got)
 		}
 		data, err := store.Export()
@@ -95,7 +96,7 @@ func TestScrollbackLegacyDefaultsAndRoundTrip(t *testing.T) {
 		if _, err = other.CommitImport(plan, nil, true); err != nil {
 			t.Fatal(err)
 		}
-		if other.Preferences() != prefs {
+		if !reflect.DeepEqual(other.Preferences(), prefs) {
 			t.Fatal("migration lost scrollback capacity")
 		}
 	}
@@ -115,7 +116,7 @@ func TestInvalidScrollbackAndExternalWriteLeavePreferencesUnchanged(t *testing.T
 	for _, capacity := range []int{-1, 1, 4, 16, 65, 1 << 30} {
 		bad := prefs
 		bad.ScrollbackMiB = capacity
-		if store.SavePreferences(bad) == nil || store.Preferences() != prefs {
+		if store.SavePreferences(bad) == nil || !reflect.DeepEqual(store.Preferences(), prefs) {
 			t.Fatal("invalid capacity changed preferences", capacity)
 		}
 		data, err := json.Marshal(Migration{Format: "sshub", Version: 1, Profiles: []PortableProfile{}, Preferences: &bad})
@@ -136,7 +137,7 @@ func TestInvalidScrollbackAndExternalWriteLeavePreferencesUnchanged(t *testing.T
 	}
 	next := prefs
 	next.ScrollbackMiB = 64
-	if err = store.SavePreferences(next); err == nil || store.Preferences() != prefs {
+	if err = store.SavePreferences(next); err == nil || !reflect.DeepEqual(store.Preferences(), prefs) {
 		t.Fatal("external edit was overwritten", err)
 	}
 	after, err = os.ReadFile(store.path)

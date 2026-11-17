@@ -134,9 +134,9 @@ func (s *Store) PreviewImport(m Migration) (*ImportPlan, error) {
 	defer s.mu.Unlock()
 	plan := &ImportPlan{owner: s, base: slices.Clone(s.source)}
 	if m.Preferences != nil {
-		p := *m.Preferences
+		p := m.Preferences.Clone()
 		plan.prefs = &p
-		copy := p
+		copy := p.Clone()
 		plan.Preferences = &copy
 	}
 	for _, p := range m.Profiles {
@@ -234,7 +234,7 @@ func (s *Store) CommitImport(plan *ImportPlan, decisions []ImportDecision, apply
 		}
 	}
 	if applyPreferences && plan.prefs != nil {
-		p := *plan.prefs
+		p := plan.prefs.Clone()
 		next.Preferences = &p
 	}
 	if err := validateDocument(next); err != nil {

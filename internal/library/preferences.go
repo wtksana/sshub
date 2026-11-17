@@ -7,13 +7,14 @@ import (
 )
 
 type Preferences struct {
-	Theme                 string `json:"theme"`
-	FontFamily            string `json:"font_family"`
-	FontSize              int    `json:"font_size"`
-	UIFontFamily          string `json:"ui_font_family,omitempty"`
-	UIFontSize            int    `json:"ui_font_size,omitempty"`
-	ScrollbackMiB         int    `json:"scrollback_mib,omitempty"`
-	SkipCloseConfirmation bool   `json:"skip_close_confirmation,omitempty"`
+	Theme                 string                   `json:"theme"`
+	FontFamily            string                   `json:"font_family"`
+	FontSize              int                      `json:"font_size"`
+	UIFontFamily          string                   `json:"ui_font_family,omitempty"`
+	UIFontSize            int                      `json:"ui_font_size,omitempty"`
+	ScrollbackMiB         int                      `json:"scrollback_mib,omitempty"`
+	SkipCloseConfirmation bool                     `json:"skip_close_confirmation,omitempty"`
+	LogHighlight          *LogHighlightPreferences `json:"log_highlight,omitempty"`
 }
 
 func DefaultPreferences() Preferences {
@@ -38,6 +39,11 @@ func ValidatePreferences(p Preferences) error {
 	}
 	if p.ScrollbackMiB != 0 && p.ScrollbackMiB != 2 && p.ScrollbackMiB != 8 && p.ScrollbackMiB != 32 && p.ScrollbackMiB != 64 {
 		return errors.New("终端历史缓冲必须为 2、8、32 或 64 MiB")
+	}
+	if p.LogHighlight != nil {
+		if err := validateLogHighlight(*p.LogHighlight); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -67,13 +73,14 @@ func preferences(d Document) Preferences {
 	if d.Preferences == nil {
 		return DefaultPreferences()
 	}
-	return *d.Preferences
+	return d.Preferences.Clone()
 }
 
 func (s *Store) SavePreferences(p Preferences) error {
 	if err := ValidatePreferences(p); err != nil {
 		return err
 	}
+	p = p.Clone()
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	next := s.doc
