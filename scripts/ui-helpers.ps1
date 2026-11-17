@@ -34,7 +34,7 @@ function Invoke-ProductUI {
         $key = $commandArgs[1].Substring(4)
         if ($key -match '^(open-workspace|edit-profile|favorite-profile|delete-profile)$') {
             Open-ProfileMenu
-        } elseif ($key -match '^(toggle-connections|toggle-files|manage-hosts)$') {
+        } elseif ($key -match '^(manage-hosts)$') {
             Invoke-RawUI press key=app-menu --settle | Out-Null
         } elseif ($key -like 'scope-*') {
             Invoke-RawUI press key=connection-filter --settle | Out-Null

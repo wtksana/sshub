@@ -35,8 +35,8 @@ func (a *app) pane(c *ui.Context, pane *layout.Node) {
 	box.ObserveInput(func(ui.InputEvent) { a.layout.ActivePane = pane.ID })
 	box.ContextMenu(func(m *ui.Menu) { a.paneMenu(m, pane, a.workspaceByID(pane.Active)) })
 	box.Children(func() {
-		ui.Row(c).FillWidth().Height(36).Background(t.Background).Children(func() {
-			ui.ScrollHorizontal(c.Key(fmt.Sprintf("workspace-tabs-%d", pane.ID))).Grow(1).Height(36).Children(func() {
+		ui.Row(c).FillWidth().Height(max(36, t.FontSize+20)).Background(t.Background).Children(func() {
+			ui.ScrollHorizontal(c.Key(fmt.Sprintf("workspace-tabs-%d", pane.ID))).Grow(1).Height(max(36, t.FontSize+20)).Children(func() {
 				ui.Row(c).Children(func() {
 					for _, saved := range pane.Tabs {
 						tab := a.workspaceByID(saved.ID)
@@ -44,12 +44,12 @@ func (a *app) pane(c *ui.Context, pane *layout.Node) {
 							continue
 						}
 						active := pane.Active == tab.key
-						row := ui.Row(c.Key(fmt.Sprintf("tab-row-%d", tab.key))).Height(36).AlignItems(ui.Center)
+						row := ui.Row(c.Key(fmt.Sprintf("tab-row-%d", tab.key))).Height(max(36, t.FontSize+20)).AlignItems(ui.Center)
 						if active {
 							row.Background(t.Surface)
 						}
 						row.Children(func() {
-							b := ui.ButtonBase(c.Key(fmt.Sprintf("tab-%d", tab.key))).Label(tab.profile.Name+" · "+tab.status).Height(34).Padding(0, 10).AccessSelected(active)
+							b := ui.ButtonBase(c.Key(fmt.Sprintf("tab-%d", tab.key))).Label(tab.profile.Name+" · "+tab.status).Height(max(34, t.FontSize+18)).Padding(0, 10).AccessSelected(active)
 							b.Tooltip(fmt.Sprintf("%s · %s\n%s@%s · 字号 %g\n右键管理会话", tab.profile.Name, tab.status, tab.profile.Username, tab.profile.Host, saved.FontSize))
 							b.Children(func() {
 								ui.Row(c).Gap(7).AlignItems(ui.Center).Children(func() {
@@ -62,7 +62,7 @@ func (a *app) pane(c *ui.Context, pane *layout.Node) {
 										color = t.Warning
 									}
 									ui.Icon(c, iconStatus).Size(8, 8).Shrink(0).TextColor(color)
-									ui.Text(c, tab.profile.Name).FontSize(12).SingleLine()
+									ui.Text(c, tab.profile.Name).FontSize(typeSize(c, -1)).SingleLine()
 								})
 							})
 							if active && a.revealedTabs[pane.ID] != tab.key {
@@ -86,8 +86,8 @@ func (a *app) pane(c *ui.Context, pane *layout.Node) {
 		tab := a.workspaceByID(pane.Active)
 		if tab == nil {
 			ui.Column(c).Fill().Padding(24).Gap(8).Justify(ui.Center).AlignItems(ui.Center).Children(func() {
-				ui.Text(c, "打开一个连接").FontSize(16).TextColor(t.TextMuted)
-				ui.Text(c, "双击左侧服务器，或右键选择打开工作区").FontSize(12).TextColor(t.TextMuted).Wrap()
+				ui.Text(c, "打开一个连接").FontSize(typeSize(c, 3)).TextColor(t.TextMuted)
+				ui.Text(c, "双击左侧服务器，或右键选择打开工作区").FontSize(typeSize(c, -1)).TextColor(t.TextMuted).Wrap()
 			})
 			return
 		}
@@ -95,7 +95,7 @@ func (a *app) pane(c *ui.Context, pane *layout.Node) {
 			a.terminalSearch(c, tab)
 		}
 		if tab.err != "" {
-			ui.Text(c, tab.err).Padding(6).FontSize(11).TextColor(t.Danger).Wrap()
+			ui.Text(c, tab.err).Padding(6).FontSize(typeSize(c, -2)).TextColor(t.Danger).Wrap()
 		}
 		if tab.term != nil {
 			e := terminal.View(c.Key(fmt.Sprintf("terminal-%d", tab.key)), tab.term).Grow(1).FillWidth().MinHeight(0)
@@ -109,7 +109,7 @@ func (a *app) pane(c *ui.Context, pane *layout.Node) {
 		} else {
 			ui.Column(c).Fill().Padding(24).Gap(8).Justify(ui.Center).AlignItems(ui.Center).Children(func() {
 				ui.Text(c.Key(fmt.Sprintf("session-status-%d", tab.key)), tab.profile.Name+" · "+tab.status).TextColor(t.TextMuted)
-				ui.Text(c, "右键标签连接 · Ctrl+Shift+Enter").FontSize(12).TextColor(t.TextMuted)
+				ui.Text(c, "右键标签连接 · Ctrl+Shift+Enter").FontSize(typeSize(c, -1)).TextColor(t.TextMuted)
 			})
 		}
 	})

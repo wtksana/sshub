@@ -98,15 +98,15 @@ func (a *app) editorView(c *ui.Context) {
 	ui.DialogBase(c.Key(fmt.Sprintf("profile-editor-%d", a.editGeneration)), &a.editing, func(backdrop, panel ui.Element) {
 		t := c.Theme()
 		backdrop.Background(ui.RGBA(0, 0, 0, 0.35))
-		panel.Width(500).MaxWidthPercent(94).MaxHeightPercent(94).Padding(20).Gap(10).Radius(8).Background(t.Background).Border(1, t.Border)
+		dialogStyle(c, panel, 500)
 		title := "新建连接"
 		if a.draft.profile.ID != "" {
 			title = "编辑连接"
 		}
-		ui.Text(c, title).FontSize(18).Bold()
+		ui.Text(c, title).FontSize(typeSize(c, 5)).Bold()
 		ui.Scroll(c.Key("editor-fields")).MaxHeight(390).Gap(8).Children(func() {
 			field := func(key, label, placeholder string, value *string) {
-				ui.Field(c, label, func() { ui.TextInput(c.Key(key), value).Placeholder(placeholder).FillWidth().MaxLength(1024) }).FillWidth()
+				formField(c, label, func() { textInput(c.Key(key), value).Placeholder(placeholder).FillWidth().MaxLength(1024) }).FillWidth()
 			}
 			field("profile-name", "名称", "例如：生产服务器", &a.draft.profile.Name)
 			ui.Row(c).Gap(12).Children(func() {
@@ -115,8 +115,8 @@ func (a *app) editorView(c *ui.Context) {
 			})
 			field("profile-user", "用户名", "例如：root", &a.draft.profile.Username)
 			field("profile-group", "分组", "留空表示未分组", &a.draft.profile.Group)
-			ui.Field(c, "认证方式", func() {
-				ui.Select(c.Key("profile-auth"), &a.draft.auth, []string{"Windows OpenSSH Agent", "密码", "私钥文件"}).FillWidth()
+			formField(c, "认证方式", func() {
+				ui.Select(c.Key("profile-auth"), &a.draft.auth, []string{"Windows OpenSSH Agent", "密码", "私钥文件"}).FillWidth().MinHeight(36).Radius(6)
 			})
 			if a.draft.auth == "私钥文件" {
 				field("profile-identity", "私钥路径", `C:\Users\you\.ssh\id_ed25519`, &a.draft.profile.IdentityPath)
@@ -134,13 +134,15 @@ func (a *app) editorView(c *ui.Context) {
 						choices = append(choices, "经由："+v.Name)
 					}
 				}
-				ui.Field(c, "单层跳板机", func() { ui.Select(c.Key("profile-jump"), &a.draft.jumpLabel, choices).FillWidth() })
+				formField(c, "单层跳板机", func() {
+					ui.Select(c.Key("profile-jump"), &a.draft.jumpLabel, choices).FillWidth().MinHeight(36).Radius(6)
+				})
 			}
 		})
 		if a.draft.err != "" {
 			ui.Text(c, a.draft.err).TextColor(t.Danger).Wrap()
 		}
-		ui.Text(c, "只保存连接配置，不会立即连接服务器。").FontSize(11).TextColor(t.TextMuted).Wrap()
+		ui.Text(c, "只保存连接配置，不会立即连接服务器。").FontSize(typeSize(c, -2)).TextColor(t.TextMuted).Wrap()
 		ui.Row(c).Gap(8).Justify(ui.End).Children(func() {
 			ui.Button(c.Key("cancel-profile"), "取消").OnClick(func() { a.editing = false })
 			ui.PrimaryButton(c.Key("save-profile"), "保存连接").OnClick(a.saveDraft)

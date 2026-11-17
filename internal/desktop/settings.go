@@ -10,9 +10,9 @@ import (
 )
 
 type settingsEditor struct {
-	preferences     library.Preferences
-	size, err       string
-	resetTabs, busy bool
+	preferences       library.Preferences
+	size, uiSize, err string
+	resetTabs, busy   bool
 }
 
 func (a *app) setDefaultFontSize(id int) {
@@ -40,6 +40,12 @@ func (a *app) saveSettings(e *settingsEditor) {
 		e.err = "终端默认字号必须为 8–32 的整数"
 		return
 	}
+	uiSize, err := strconv.Atoi(strings.TrimSpace(e.uiSize))
+	if err != nil || uiSize < 10 || uiSize > 20 {
+		e.err = "界面字号必须为 10–20 的整数"
+		return
+	}
+	p.UIFontSize, p.UIFontFamily = uiSize, strings.TrimSpace(p.UIFontFamily)
 	p.FontSize, p.FontFamily = size, strings.TrimSpace(p.FontFamily)
 	if err := library.ValidatePreferences(p); err != nil {
 		e.err = err.Error()
@@ -71,19 +77,39 @@ func (a *app) settingsView(c *ui.Context) {
 	ui.DialogBase(c.Key("settings-dialog"), &open, func(backdrop, panel ui.Element) {
 		t := c.Theme()
 		backdrop.Background(ui.RGBA(0, 0, 0, .35))
-		panel.Width(500).MaxWidthPercent(94).MaxHeightPercent(94).Padding(20).Gap(12).Radius(6).Background(t.Background).Border(1, t.Border)
-		ui.Text(c, "设置").FontSize(18).Bold()
-		ui.Column(c).FillWidth().Gap(12).Disabled(e.busy).Children(func() {
-			ui.Field(c, "外观", func() {
+		dialogStyle(c, panel, 560)
+		ui.Text(c, "设置").FontSize(typeSize(c, 5)).Bold()
+		ui.Scroll(c.Key("settings-fields")).FillWidth().MaxHeight(450).Gap(16).Disabled(e.busy).Children(func() {
+			formField(c, "外观", func() {
 				ui.Row(c).Gap(12).Children(func() {
-					for _, choice := range []struct{ value, label string }{{"system", "跟随系统"}, {"light", "浅色"}, {"dark", "深色"}} {
+					for _, choice := range []struct{ value, label string }{{"system", "跟随系统"}, {"light", "GitHub Light"}, {"dark", "GitHub Dark"}} {
 						ui.Radio(c.Key("theme-"+choice.value), &e.preferences.Theme, choice.value, choice.label)
 					}
 				})
 			})
-			ui.Field(c, "终端字体", func() { ui.TextInput(c.Key("settings-font"), &e.preferences.FontFamily).FillWidth().MaxLength(256) })
-			ui.Text(c, "使用本机已安装的字体；找不到的字符由系统字体回退显示。").FontSize(11).TextColor(t.TextMuted).Wrap()
-			ui.Field(c, "默认字号（8–32）", func() { ui.TextInput(c.Key("settings-size"), &e.size).FillWidth().MaxLength(3) })
+			ui.Divider(c)
+			ui.Text(c, "界面").Bold()
+			ui.Row(c).FillWidth().Gap(12).Children(func() {
+				ui.Column(c).Grow(1).Basis(0).Children(func() {
+					formField(c, "字体", func() {
+						textInput(c.Key("settings-ui-font"), &e.preferences.UIFontFamily).Placeholder("系统默认字体").FillWidth().MaxLength(256)
+					})
+				})
+				ui.Column(c).Width(max(130, c.Theme().FontSize*9)).Children(func() {
+					formField(c, "字号（10–20）", func() { textInput(c.Key("settings-ui-size"), &e.uiSize).FillWidth().MaxLength(3) })
+				})
+			})
+			ui.Divider(c)
+			ui.Text(c, "终端").Bold()
+			ui.Row(c).FillWidth().Gap(12).Children(func() {
+				ui.Column(c).Grow(1).Basis(0).Children(func() {
+					formField(c, "终端字体", func() { textInput(c.Key("settings-font"), &e.preferences.FontFamily).FillWidth().MaxLength(256) })
+				})
+				ui.Column(c).Width(max(130, c.Theme().FontSize*9)).Children(func() {
+					formField(c, "字号（8–32）", func() { textInput(c.Key("settings-size"), &e.size).FillWidth().MaxLength(3) })
+				})
+			})
+			ui.Text(c, "使用本机已安装字体；缺失字符由系统回退显示。").FontSize(typeSize(c, -2)).TextColor(t.TextMuted).Wrap()
 			ui.Checkbox(c.Key("settings-reset-tabs"), &e.resetTabs, "同时将现有标签字号设为默认")
 		})
 		if e.err != "" {

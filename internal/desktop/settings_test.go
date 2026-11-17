@@ -22,6 +22,7 @@ func TestDefaultFontAndPerTabZoom(t *testing.T) {
 	a.zoom(one, 2, false)
 	two := a.openWorkspace(p)
 	prefs.FontSize = 15
+	prefs.UIFontSize, prefs.UIFontFamily = 20, "Microsoft YaHei UI"
 	if err = a.store.SavePreferences(prefs); err != nil {
 		t.Fatal(err)
 	}
@@ -109,5 +110,28 @@ func TestImportReplacementPreservesSessionsAndCredentialIsolation(t *testing.T) 
 	_, saved := a.layout.Locate(tab.key)
 	if saved.ProfileID != newProfile.ID {
 		t.Fatal("layout retains obsolete profile reference")
+	}
+}
+
+func TestFilePanelDefaultsAndReleaseReset(t *testing.T) {
+	a := newApp(t.TempDir())
+	defer a.close()
+	if !a.hideRight {
+		t.Fatal("new workspace should start without SFTP panel")
+	}
+	tab := &workspace{files: fileBrowser{path: "/old", input: "/old", err: "old failure", loading: true, generation: 3}}
+	a.release(tab)
+	if tab.files.path != "" || tab.files.err != "" || tab.files.loading || tab.files.generation <= 3 {
+		t.Fatal("reconnection retained directory state")
+	}
+}
+
+func TestSettingsRejectZeroUISize(t *testing.T) {
+	a := newApp(t.TempDir())
+	defer a.close()
+	e := &settingsEditor{preferences: library.DefaultPreferences(), size: "13", uiSize: "0"}
+	a.saveSettings(e)
+	if e.err == "" || e.busy {
+		t.Fatal("explicit zero UI size accepted as a legacy default")
 	}
 }

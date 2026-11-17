@@ -49,7 +49,7 @@ func (a *app) toggleSearch() {
 func (a *app) terminalSearch(c *ui.Context, tab *workspace) {
 	key := func(s string) *ui.Context { return c.Key(fmt.Sprintf("%s-%d", s, tab.key)) }
 	ui.Row(c).FillWidth().Padding(4, 7).Gap(4).Wrap().Children(func() {
-		input := ui.TextInput(key("terminal-query"), &tab.search).Label("搜索终端输出").Placeholder("搜索输出…").Grow(1).MinWidth(80)
+		input := textInput(key("terminal-query"), &tab.search).Label("搜索终端输出").Placeholder("搜索输出…").Grow(1).MinWidth(80)
 		if tab.searchFocus {
 			input.Focus()
 			tab.searchFocus = false
@@ -64,7 +64,7 @@ func (a *app) terminalSearch(c *ui.Context, tab *workspace) {
 			label = "搜索中…"
 			c.After(16 * time.Millisecond)
 		}
-		ui.Text(key("terminal-matches"), label).FontSize(10)
+		ui.Text(key("terminal-matches"), label).FontSize(typeSize(c, -3))
 		iconButton(key("search-previous"), iconPrevious, "上一处").OnClick(tab.term.SearchPrevious)
 		iconButton(key("search-next"), iconNext, "下一处").OnClick(tab.term.SearchNext)
 		iconButton(key("search-close"), iconClose, "关闭搜索").OnClick(func() {

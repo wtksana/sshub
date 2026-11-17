@@ -1,7 +1,6 @@
 package desktop
 
 import (
-	"runtime"
 	"time"
 
 	"github.com/egoist/mygo/ui"
@@ -13,21 +12,8 @@ func (a *app) view(c *ui.Context) {
 		c.After(time.Second)
 	}
 	a.focusedTerminal = 0
-	t := *c.Theme()
-	switch a.preferences.Theme {
-	case "light":
-		t = *ui.LightTheme()
-	case "dark":
-		t = *ui.DarkTheme()
-	}
-	t.Spacing, t.Radius, t.FontSize = 4, 3, 13
-	if runtime.GOOS == "windows" {
-		t.Font = "Microsoft YaHei UI"
-	}
-	if !t.Dark {
-		t.Background, t.Text, t.TextMuted, t.Border = ui.Hex("#f5f7fa"), ui.Hex("#263244"), ui.Hex("#65748a"), ui.Hex("#dce2ea")
-	}
-	c.SetTheme(t.WithAccent(ui.Hex("#2763b3")))
+	t := githubTheme(c.Theme().Dark, a.preferences)
+	c.SetTheme(&t)
 	c.DisableAnimations()
 	c.SetMenuPresentation(ui.PopoverMenus)
 	ui.Column(c).Fill().Children(func() {
@@ -35,7 +21,7 @@ func (a *app) view(c *ui.Context) {
 		ui.Divider(c)
 		if a.loadError != "" {
 			ui.Column(c).Padding(24).Gap(12).Children(func() {
-				ui.Text(c, "无法读取连接库").FontSize(18).Bold()
+				ui.Text(c, "无法读取连接配置").FontSize(typeSize(c, 5)).Bold()
 				ui.Text(c, a.loadError).TextColor(t.Danger).Wrap()
 				ui.Text(c, "现有文件未被覆盖。请检查配置文件或关闭占用该目录的实例，然后重试。").Wrap()
 				ui.Text(c, a.dir).TextColor(t.TextMuted).Wrap()

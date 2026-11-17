@@ -79,10 +79,13 @@ try {
     Invoke-RawUI press key=settings-save --settle | Out-Null
     Assert-Text '8–32'
     Invoke-RawUI press key=theme-dark | Out-Null
+    Invoke-RawUI fill key=settings-ui-font 'Microsoft YaHei UI' | Out-Null
+    Invoke-RawUI fill key=settings-ui-size '15' | Out-Null
     Invoke-RawUI fill key=settings-font 'Consolas' | Out-Null
     Invoke-RawUI fill key=settings-size '16' | Out-Null
     Invoke-RawUI press key=settings-save --settle | Out-Null
     Wait-Text '设置已保存'
+    if ((Read-Config).preferences.ui_font_size -ne 15 -or (Read-Config).preferences.ui_font_family -ne 'Microsoft YaHei UI') { throw 'UI fonts not persisted separately' }
     if ((Read-Config).preferences.theme -ne 'dark') { throw 'Theme not persisted' }
     Invoke-RawUI screenshot (Join-Path $directory 'dark.png') | Out-Null
     Invoke-RawUI press key=profile-original --settle | Out-Null

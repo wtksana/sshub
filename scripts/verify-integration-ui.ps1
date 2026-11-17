@@ -83,6 +83,7 @@ try {
         Start-Sleep -Milliseconds 50
     }
     UI open --socket $socket | Out-Null
+    UI press key=toggle-files --settle | Out-Null
     $tabA = Open-Session 'alpha' '集成服务器 A' -First
     Navigate $tabA '/inbox'
     $tabB = Open-Session 'beta' '集成服务器 B'
@@ -96,7 +97,7 @@ try {
     Wait-Text '传输任务 上传 持续上传 中文.bin'
     Wait-Text '传输任务 上传 排队上传.txt'
     $before = Get-ProductSnapshot
-    if ($before -notmatch '集成服务器 A · 传输中' -or $before -notmatch '集成服务器 A · 等待中') { throw 'Expected both an active and a queued upload at focus switch; rerun with slower fixture' }
+    if ($before -notmatch '传输中' -or $before -notmatch '等待中') { throw 'Expected both an active and a queued upload at focus switch; rerun with slower fixture' }
     $before | Set-Content -Encoding utf8 (Join-Path $directory 'before-focus-switch.txt')
     UI press "key=tab-$tabB" --settle | Out-Null
     if ((Get-ProductSnapshot) -notmatch '\[text\] "集成服务器 B · 已连接" key=file-server') { throw 'File panel did not follow B' }

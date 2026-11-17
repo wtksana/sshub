@@ -89,10 +89,8 @@ public static class SSHubWindowTest {
     $client = [SSHubWindowTest]::Client($windowHandle)
     if ([SSHubWindowTest]::Hit($windowHandle, $origin.X + $client.Right - [int](23 * $scale), $origin.Y + [int](17 * $scale)) -ne 1) { throw 'Close button is still system chrome' }
     if ([SSHubWindowTest]::Hit($windowHandle, $origin.X + $client.Right - [int](69 * $scale), $origin.Y + [int](17 * $scale)) -ne 9) { throw 'Custom maximize does not expose Windows snap hit target' }
-    Invoke-RawUI press key=app-menu --settle | Out-Null
-    Invoke-RawUI press 'key={toggle-files}' --settle | Out-Null
-    Invoke-RawUI press key=app-menu --settle | Out-Null
-    Invoke-RawUI press 'key={toggle-files}' --settle | Out-Null
+    Invoke-RawUI press key=toggle-files --settle | Out-Null
+    Invoke-RawUI press key=toggle-files --settle | Out-Null
     Invoke-RawUI screenshot (Join-Path $directory 'custom-titlebar.png') | Out-Null
     Invoke-RawUI press key=window-maximize --settle | Out-Null
     Wait-Native { [SSHubWindowTest]::IsZoomed($windowHandle) } 'maximize'

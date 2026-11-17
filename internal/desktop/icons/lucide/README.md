@@ -5,6 +5,7 @@
 | 用途 | Iconify 名称 |
 | --- | --- |
 | 应用菜单 | `lucide:menu` |
+| 连接面板／文件面板 | `lucide:panel-left`、`lucide:panel-right` |
 | 新建连接 | `lucide:plus` |
 | 筛选连接 | `lucide:list-filter` |
 | 文件、窗格及队列操作 | `lucide:ellipsis` |

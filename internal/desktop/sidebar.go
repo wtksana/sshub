@@ -12,13 +12,13 @@ import (
 
 func (a *app) sidebar(c *ui.Context) {
 	t := c.Theme()
-	ui.Column(c).Fill().Clip().Padding(8).Gap(6).Children(func() {
+	ui.Column(c).Fill().Clip().Background(t.Surface).Padding(12).Gap(8).Children(func() {
 		ui.Row(c).AlignItems(ui.Center).Children(func() {
-			ui.Text(c, "连接库").Bold().Grow(1)
+			ui.Text(c, "连接").Bold().Grow(1)
 			iconButton(c.Key("new-profile"), iconPlus, "新建连接").OnClick(func() { a.beginEdit(library.Profile{}) })
 			iconButton(c.Key("connection-filter"), iconFilter, "筛选连接").Menu(a.filterMenu)
 		})
-		ui.TextInput(c.Key("search-profiles"), &a.query).Label("搜索连接").Placeholder("搜索名称、地址、用户名…").FillWidth()
+		textInput(c.Key("search-profiles"), &a.query).Label("搜索连接").Placeholder("搜索名称、地址、用户名…").FillWidth()
 		if a.group != "全部分组" && a.group != "未分组" && !slices.Contains(library.Groups(a.profiles), strings.TrimPrefix(a.group, "分组：")) {
 			a.group = "全部分组"
 		}
@@ -43,15 +43,14 @@ func (a *app) sidebar(c *ui.Context) {
 		if filter != "全部连接" {
 			suffix = " · " + filter
 		}
-		ui.Textf(c, "%d / %d 条连接%s", len(results), len(a.profiles), suffix).FontSize(11).TextColor(t.TextMuted).SingleLine().Tooltip(filter)
+		ui.Textf(c, "%d / %d 条连接%s", len(results), len(a.profiles), suffix).FontSize(typeSize(c, -2)).TextColor(t.TextMuted).SingleLine().Tooltip(filter)
 		ui.List(c.Key("profile-list"), nil, len(results), func(i int) {
 			p := results[i]
-			row := ui.ButtonBase(c.Key("profile-"+p.ID)).Label("选择连接 "+p.Name).AccessSelected(a.selected == p.ID).FillWidth().Padding(7, 8).Radius(2)
+			row := ui.ButtonBase(c.Key("profile-"+p.ID)).Label("选择连接 "+p.Name).AccessSelected(a.selected == p.ID).FillWidth().Padding(7, 8).Radius(6)
 			if a.selected == p.ID {
-				row.Background(ui.Hex("#e6edf6"))
-				if t.Dark {
-					row.Background(ui.Hex("#263b57"))
-				}
+				row.Background(t.Selection)
+			} else if row.Hovered() {
+				row.Background(t.SurfaceHover)
 			}
 			row.Children(func() {
 				ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
@@ -61,7 +60,7 @@ func (a *app) sidebar(c *ui.Context) {
 						}
 						ui.Text(c, p.Name).Bold().SingleLine()
 					})
-					ui.Text(c, p.Username+"@"+net.JoinHostPort(p.Host, strconv.Itoa(p.Port))).FontSize(11).SingleLine()
+					ui.Text(c, p.Username+"@"+net.JoinHostPort(p.Host, strconv.Itoa(p.Port))).FontSize(typeSize(c, -2)).SingleLine()
 				})
 			}).OnClick(func() { a.selected = p.ID })
 			row.Tooltip(p.Name + "\n" + p.Username + "@" + net.JoinHostPort(p.Host, strconv.Itoa(p.Port)) + "\n认证：" + authLabel(p.Auth) + "\n分组：" + p.Group + "\n双击连接 · 右键管理")

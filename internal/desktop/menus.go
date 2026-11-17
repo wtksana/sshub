@@ -115,20 +115,13 @@ func (a *app) paneMenu(m *ui.Menu, pane *layout.Node, tab *workspace) {
 
 func (a *app) appMenu(m *ui.Menu) {
 	if m.Item("设置…").ID("settings").Disabled(a.store == nil).Chosen() {
-		a.settings = &settingsEditor{preferences: a.preferences, size: fmt.Sprint(a.preferences.FontSize)}
+		a.settings = &settingsEditor{preferences: a.preferences, size: fmt.Sprint(a.preferences.FontSize), uiSize: fmt.Sprint(a.preferences.EffectiveUIFontSize())}
 	}
 	if m.Item("导入配置…").ID("import-config").Disabled(a.store == nil).Chosen() {
 		a.migration = &migrationEditor{}
 	}
 	if m.Item("导出配置…").ID("export-config").Disabled(a.store == nil).Chosen() {
 		a.migration = &migrationEditor{export: true}
-	}
-	m.Separator()
-	if m.Item("连接库").ID("toggle-connections").Checked(!a.hideLeft).Chosen() {
-		a.hideLeft = !a.hideLeft
-	}
-	if m.Item("文件面板").ID("toggle-files").Checked(!a.hideRight).Chosen() {
-		a.hideRight = !a.hideRight
 	}
 	m.Separator()
 	if m.Item("已信任主机…").ID("manage-hosts").Disabled(a.store == nil).Chosen() {

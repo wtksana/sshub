@@ -109,9 +109,9 @@ func (a *app) promptView(c *ui.Context) {
 	ui.DialogBase(c.Key(fmt.Sprintf("connection-prompt-%d", a.promptGeneration)), &open, func(backdrop, panel ui.Element) {
 		t := c.Theme()
 		backdrop.Background(ui.RGBA(0, 0, 0, 0.35))
-		panel.Width(510).MaxWidthPercent(94).Padding(22).Gap(12).Radius(8).Background(t.Background).Border(1, t.Border)
+		dialogStyle(c, panel, 510)
 		if p.kind == "host" {
-			ui.Text(c, "确认服务器身份").FontSize(18).Bold()
+			ui.Text(c, "确认服务器身份").FontSize(typeSize(c, 5)).Bold()
 			ui.Text(c, p.address).Bold().Wrap()
 			ui.Text(c, "主机密钥："+p.algorithm).Wrap()
 			ui.Text(c, p.fingerprint).Wrap()
@@ -121,11 +121,11 @@ func (a *app) promptView(c *ui.Context) {
 			if p.kind == "passphrase" {
 				label = "私钥口令"
 			}
-			ui.Text(c, "输入"+label).FontSize(18).Bold()
+			ui.Text(c, "输入"+label).FontSize(typeSize(c, 5)).Bold()
 			ui.Text(c, p.name+"（"+p.address+"）").Wrap()
-			ui.TextInput(c.Key("connection-secret"), &p.value).Password().Label(label).AutoFocus().FillWidth()
+			textInput(c.Key("connection-secret"), &p.value).Password().Label(label).AutoFocus().FillWidth()
 			ui.Checkbox(c.Key("remember-secret"), &p.remember, "记住到系统凭据库")
-			ui.Text(c, p.hint).TextColor(t.TextMuted).FontSize(12).Wrap()
+			ui.Text(c, p.hint).TextColor(t.TextMuted).FontSize(typeSize(c, -1)).Wrap()
 		}
 		ui.Row(c).Gap(8).Justify(ui.End).Children(func() {
 			ui.Button(c.Key("cancel-connection-prompt"), "取消连接").OnClick(func() { a.answerPrompt(false) })

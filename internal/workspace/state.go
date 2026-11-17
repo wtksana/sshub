@@ -37,7 +37,7 @@ type State struct {
 }
 
 func New() *State {
-	return &State{Version: 1, Root: &Node{ID: 1}, ActivePane: 1, NextID: 2, LeftSize: 260, ContentPercent: 66}
+	return &State{Version: 1, Root: &Node{ID: 1}, ActivePane: 1, NextID: 2, LeftSize: 260, ContentPercent: 66, HideRight: true}
 }
 
 func (s *State) Panes() []*Node {

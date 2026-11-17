@@ -15,9 +15,20 @@ import (
 type fileBrowser struct {
 	path, input, err string
 	entries          []os.FileInfo
+	ordered          []os.FileInfo
+	sort             fileSort
 	loading          bool
+	tableWidth       float32
 	generation       int
 	cancel           context.CancelFunc
+}
+
+// Only the visible active session initializes its directory browser. Explicit
+// refresh remains available after an error; drawing must never cause retry loops.
+func (a *app) ensureFiles(tab *workspace) {
+	if !a.hideRight && tab != nil && tab.client != nil && tab.files.path == "" && !tab.files.loading && tab.files.err == "" {
+		a.browse(tab, "")
+	}
 }
 
 func (a *app) browse(tab *workspace, target string) {
@@ -33,6 +44,7 @@ func (a *app) browse(tab *workspace, target string) {
 	generation, attempt := tab.files.generation, tab.attempt
 	transport := tab.transport
 	if !transport.retain() {
+		tab.files.loading = false
 		cancel()
 		return
 	}
@@ -60,6 +72,7 @@ func (a *app) browse(tab *workspace, target string) {
 				return
 			}
 			tab.files.path, tab.files.input, tab.files.entries = dir, dir, entries
+			tab.files.applySort()
 		})
 	}()
 }
@@ -96,72 +109,99 @@ func (a *app) fileOperation(tab *workspace, action func(context.Context, *connec
 
 func (a *app) files(c *ui.Context) {
 	t := c.Theme()
-	ui.Column(c).Fill().Clip().Padding(10).Gap(7).Children(func() {
+	ui.Column(c).Fill().Clip().Background(t.Surface).Padding(12).Gap(8).Children(func() {
 		tab := a.activeWorkspace()
-		ui.Row(c).FillWidth().Gap(6).Children(func() {
-			ui.Text(c, "文件").Bold().Grow(1)
-			if tab != nil {
-				iconButton(c.Key("files-menu"), iconMore, "文件操作").Menu(func(m *ui.Menu) { a.directoryMenu(m, tab) })
-			}
-		})
+		a.ensureFiles(tab)
 		status := "未连接服务器"
 		if tab != nil {
 			status = tab.profile.Name + " · " + tab.status
 		}
-		ui.Text(c.Key("file-server"), status).FontSize(12).TextColor(t.TextMuted).Wrap()
+		ui.Row(c).FillWidth().Gap(8).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, "文件").Bold().Shrink(0)
+			ui.Text(c.Key("file-server"), status).FontSize(typeSize(c, -1)).TextColor(t.TextMuted).SingleLine().Tooltip(status).Grow(1).MinWidth(0)
+			if tab != nil {
+				if summary := tab.files.summary(); summary != "" {
+					ui.Text(c.Key("files-summary"), summary).FontSize(typeSize(c, -2)).TextColor(t.TextMuted).Shrink(0)
+				}
+				iconButton(c.Key("files-menu"), iconMore, "文件操作").Menu(func(m *ui.Menu) { a.directoryMenu(m, tab) })
+			}
+		})
 		if tab != nil && tab.client != nil {
-			input := ui.TextInput(c.Key(fmt.Sprintf("remote-path-%d", tab.key)), &tab.files.input).Placeholder("远程路径，回车跳转").FillWidth()
-			if input.Submitted() {
-				target := tab.files.input
-				if !path.IsAbs(target) {
-					target = path.Join(tab.files.path, target)
-				}
-				a.browse(tab, target)
-			}
-			if tab.files.loading {
-				ui.Text(c, "正在读取目录…").FontSize(12).TextColor(t.TextMuted)
-			}
-			if tab.files.err != "" {
-				ui.Text(c.Key("files-error"), tab.files.err).TextColor(t.Danger).FontSize(12).Wrap()
-			}
-			if tab.files.path != "" {
-				ui.Button(c.Key("remote-parent"), "").Label("上级目录").FillWidth().Children(func() {
-					ui.Icon(c, iconParent).Size(16, 16).Shrink(0)
-					ui.Text(c, "../")
-				}).OnClick(func() { a.browse(tab, path.Dir(tab.files.path)) })
-			}
-			zone := ui.List(c.Key("remote-files"), nil, len(tab.files.entries), func(i int) {
-				entry := tab.files.entries[i]
-				name := entry.Name()
-				if !connection.ValidName(name) {
-					return
-				}
-				label, icon := name, iconFile
-				if entry.IsDir() {
-					label += "/"
-					icon = iconFolder
-				}
-				if entry.Mode()&os.ModeSymlink != 0 {
-					icon = iconSymlink
-				}
-				target := path.Join(tab.files.path, name)
-				row := ui.Button(c.Key(fmt.Sprintf("remote-entry-%d", i)), "").Label(label).FillWidth().Justify(ui.Start).Tooltip(entry.Mode().String() + " · " + bytesText(entry.Size())).ContextMenu(func(m *ui.Menu) { a.entryMenu(m, tab, target, entry) }).Children(func() {
-					ui.Icon(c, icon).Size(16, 16).Shrink(0).TextColor(t.TextMuted)
-					ui.Text(c, label).SingleLine()
-				})
-				if row.DoubleClicked() && entry.IsDir() {
+			ui.Row(c).FillWidth().Gap(6).AlignItems(ui.Center).Children(func() {
+				iconButton(c.Key("remote-parent"), iconParent, "上级目录").Disabled(tab.files.path == "").OnClick(func() { a.browse(tab, path.Dir(tab.files.path)) })
+				input := textInput(c.Key(fmt.Sprintf("remote-path-%d", tab.key)), &tab.files.input).Placeholder("远程路径，回车跳转").Label("远程路径").Grow(1).MinWidth(0)
+				if input.Submitted() {
+					target := tab.files.input
+					if !path.IsAbs(target) {
+						target = path.Join(tab.files.path, target)
+					}
 					a.browse(tab, target)
 				}
-			}).Grow(1).FillWidth().ContextMenu(func(m *ui.Menu) { a.directoryMenu(m, tab) }).Children(func() {
-				if !tab.files.loading && tab.files.err == "" && len(tab.files.entries) == 0 {
-					ui.Text(c, "空目录").TextColor(t.TextMuted)
-				}
 			})
-			if dropped := zone.DroppedFiles(); len(dropped) > 0 && tab.files.path != "" {
-				a.upload(tab, tab.files.path, dropped)
+			if tab.files.err != "" {
+				ui.Text(c.Key("files-error"), tab.files.err).TextColor(t.Danger).FontSize(typeSize(c, -1)).Wrap()
 			}
+			modifiedWidth, sizeWidth := typeSize(c, -2)*9.5+8, typeSize(c, -2)*5+8
+			table := ui.ScrollHorizontal(c.Key("remote-table-scroll")).Grow(1).FillWidth()
+			// Horizontal scroll measures its children with unbounded width. Use
+			// the last viewport to fill available space; settle once after resize.
+			width := max(80+modifiedWidth+sizeWidth+32, table.Bounds().W)
+			if width != tab.files.tableWidth {
+				tab.files.tableWidth = width
+				c.Invalidate()
+			}
+			table.Children(func() {
+				ui.Column(c).FillHeight().Width(width).Shrink(0).Background(t.Background).Radius(6).Clip().Children(func() {
+					a.fileHeaders(c, &tab.files, modifiedWidth, sizeWidth)
+					entries := tab.files.displayEntries()
+					zone := ui.List(c.Key("remote-files"), nil, len(entries), func(i int) {
+						entry := entries[i]
+						name := entry.Name()
+						if !connection.ValidName(name) {
+							return
+						}
+						label, icon := name, iconFile
+						if entry.IsDir() {
+							label += "/"
+							icon = iconFolder
+						}
+						if entry.Mode()&os.ModeSymlink != 0 {
+							icon = iconSymlink
+						}
+						target := path.Join(tab.files.path, name)
+						row := ui.ButtonBase(c.Key(fmt.Sprintf("remote-entry-%d", i))).Label(label).FillWidth().MinHeight(max(34, t.FontSize+18)).Padding(6, 8).Gap(8).Radius(4).Justify(ui.Start).Tooltip(name + "\n" + entry.Mode().String() + " · " + bytesText(entry.Size()) + "\n" + fileModifiedText(entry)).ContextMenu(func(m *ui.Menu) { a.entryMenu(m, tab, target, entry) }).Children(func() {
+							ui.Row(c).Grow(1).Basis(0).MinWidth(80).Gap(8).AlignItems(ui.Center).Children(func() {
+								ui.Icon(c, icon).Size(16, 16).Shrink(0).TextColor(t.TextMuted)
+								ui.Text(c, label).SingleLine().Grow(1).MinWidth(0)
+							})
+							ui.Text(c, fileModifiedText(entry)).Width(modifiedWidth).Shrink(0).SingleLine().FontSize(typeSize(c, -2)).TextColor(t.TextMuted).Tooltip(entry.ModTime().Local().Format("2006-01-02 15:04:05 MST"))
+							size := "—"
+							if !entry.IsDir() {
+								size = bytesText(entry.Size())
+							}
+							ui.Text(c, size).Width(sizeWidth).Shrink(0).TextAlign(ui.End).SingleLine().FontSize(typeSize(c, -2)).TextColor(t.TextMuted)
+						})
+						if row.Hovered() {
+							row.Background(t.SurfaceHover)
+						}
+						if row.DoubleClicked() && entry.IsDir() {
+							a.browse(tab, target)
+						}
+					}).Grow(1).FillWidth().Background(t.Background).Radius(6).ContextMenu(func(m *ui.Menu) { a.directoryMenu(m, tab) }).Children(func() {
+						if !tab.files.loading && tab.files.err == "" && len(entries) == 0 {
+							ui.Column(c).FillWidth().Padding(20, 12).Gap(6).Children(func() {
+								ui.Text(c, "空目录").TextColor(t.TextMuted)
+								ui.Text(c, "拖入文件即可上传").FontSize(typeSize(c, -2)).TextColor(t.TextMuted)
+							})
+						}
+					})
+					if dropped := zone.DroppedFiles(); len(dropped) > 0 && tab.files.path != "" {
+						a.upload(tab, tab.files.path, dropped)
+					}
+				})
+			})
 		} else {
-			ui.Text(c, "连接后浏览远程文件").TextColor(t.TextMuted).FontSize(12)
+			ui.Text(c, "连接后浏览远程文件").TextColor(t.TextMuted).FontSize(typeSize(c, -1))
 			ui.Spacer(c)
 		}
 		ui.Divider(c)

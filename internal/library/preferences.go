@@ -7,9 +7,11 @@ import (
 )
 
 type Preferences struct {
-	Theme      string `json:"theme"`
-	FontFamily string `json:"font_family"`
-	FontSize   int    `json:"font_size"`
+	Theme        string `json:"theme"`
+	FontFamily   string `json:"font_family"`
+	FontSize     int    `json:"font_size"`
+	UIFontFamily string `json:"ui_font_family,omitempty"`
+	UIFontSize   int    `json:"ui_font_size,omitempty"`
 }
 
 func DefaultPreferences() Preferences {
@@ -26,7 +28,21 @@ func ValidatePreferences(p Preferences) error {
 	if p.FontSize < 8 || p.FontSize > 32 {
 		return errors.New("终端默认字号必须为 8–32")
 	}
+	if p.UIFontFamily != "" && (strings.TrimSpace(p.UIFontFamily) == "" || len(p.UIFontFamily) > 256 || strings.IndexFunc(p.UIFontFamily, unicode.IsControl) >= 0) {
+		return errors.New("请输入有效的界面字体名称")
+	}
+	if p.UIFontSize != 0 && (p.UIFontSize < 10 || p.UIFontSize > 20) {
+		return errors.New("界面字号必须为 10–20")
+	}
 	return nil
+}
+
+// UI defaults also apply to preferences saved before separate UI fonts existed.
+func (p Preferences) EffectiveUIFontSize() int {
+	if p.UIFontSize == 0 {
+		return 13
+	}
+	return p.UIFontSize
 }
 
 func (s *Store) Preferences() Preferences {

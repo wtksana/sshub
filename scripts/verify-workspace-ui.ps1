@@ -101,6 +101,7 @@ try {
         @{id='beta';name='测试服务器';host='127.0.0.1';port=[int]($serverB.address.Split(':')[-1]);username='test';auth='password';favorite=$false}
     )} | ConvertTo-Json -Depth 5 | Set-Content -Encoding utf8 (Join-Path $dataDir 'connections.json')
     Start-App
+    UI press key=toggle-files --settle | Out-Null
     Open-Session 'alpha' '开发服务器' 'SESSION_ALPHA_ONE'
     Open-Session 'alpha' '开发服务器' 'SESSION_ALPHA_TWO'
     UI press key=split-horizontal --settle | Out-Null

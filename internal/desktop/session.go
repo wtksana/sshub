@@ -68,7 +68,7 @@ func (a *app) release(tab *workspace) {
 		tab.files.cancel()
 		tab.files.cancel = nil
 	}
-	tab.files.loading = false
+	tab.files = fileBrowser{generation: tab.files.generation + 1}
 	if tab.cancel != nil {
 		tab.cancel()
 		tab.cancel = nil
@@ -176,6 +176,7 @@ func (a *app) connect(tab *workspace) {
 		}
 		observed := a.observeShell(shell)
 		term, err := terminal.New(terminal.Options{
+			Theme: githubTerminalLight, DarkTheme: githubTerminalDark,
 			Conn: observed, Font: terminal.Font{Family: fontFamily, Size: fontSize}, Scrollback: 2 << 20, ImageLimit: -1,
 			OnZoom:   func(z terminal.Zoom) bool { a.zoom(tab, z.Steps, z.Reset); return true },
 			OnSearch: func(terminal.SearchStatus) { a.dispatch(func() {}) },
@@ -228,7 +229,6 @@ func (a *app) connect(tab *workspace) {
 				a.release(tab)
 				tab.status = "已断开"
 			default:
-				a.browse(tab, "")
 				for _, request := range tab.retryRequests {
 					a.enqueue(tab, request, &transferBatch{})
 				}

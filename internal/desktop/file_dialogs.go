@@ -73,9 +73,9 @@ func (a *app) fileDialogs(c *ui.Context) {
 		ui.DialogBase(c.Key(fmt.Sprintf("file-editor-%p", e)), &open, func(backdrop, panel ui.Element) {
 			t := c.Theme()
 			backdrop.Background(ui.RGBA(0, 0, 0, .35))
-			panel.Width(510).MaxWidthPercent(94).Padding(20).Gap(12).Background(t.Background).Border(1, t.Border).Radius(6)
+			dialogStyle(c, panel, 510)
 			title := map[string]string{"mkdir": "新建文件夹", "rename": "重命名", "delete": "删除远程文件？", "properties": "属性与权限"}[e.kind]
-			ui.Text(c, title).FontSize(18).Bold()
+			ui.Text(c, title).FontSize(typeSize(c, 5)).Bold()
 			ui.Text(c, e.tab.profile.Name+" · "+e.target).Wrap()
 			if e.kind == "delete" {
 				ui.Text(c, "此操作无法撤销。目录将递归删除，符号链接仅删除链接本身。").Wrap()
@@ -84,7 +84,7 @@ func (a *app) fileDialogs(c *ui.Context) {
 					ui.Text(c, fmt.Sprintf("%s · %s\n修改时间：%s", e.info.Mode(), bytesText(e.info.Size()), e.info.ModTime().Format(time.DateTime))).Wrap()
 				}
 				if e.info == nil || e.info.Mode()&os.ModeSymlink == 0 {
-					ui.TextInput(c.Key("file-edit-value"), &e.value).Label(map[bool]string{true: "八进制权限", false: "名称"}[e.kind == "properties"]).AutoFocus().FillWidth()
+					textInput(c.Key("file-edit-value"), &e.value).Label(map[bool]string{true: "八进制权限", false: "名称"}[e.kind == "properties"]).AutoFocus().FillWidth()
 				} else {
 					ui.Text(c, "符号链接不支持在此修改目标权限").Wrap()
 				}
@@ -106,12 +106,11 @@ func (a *app) fileDialogs(c *ui.Context) {
 	if p := a.transferConflict; p != nil {
 		open := true
 		ui.DialogBase(c.Key(fmt.Sprintf("file-conflict-%p", p)), &open, func(backdrop, panel ui.Element) {
-			t := c.Theme()
 			backdrop.Background(ui.RGBA(0, 0, 0, .35))
-			panel.Width(540).MaxWidthPercent(94).Padding(20).Gap(12).Background(t.Background).Border(1, t.Border).Radius(6)
-			ui.Text(c, "目标文件已存在").Bold().FontSize(18)
+			dialogStyle(c, panel, 540)
+			ui.Text(c, "目标文件已存在").Bold().FontSize(typeSize(c, 5))
 			ui.Text(c, p.server+" · "+p.path).Wrap()
-			ui.TextInput(c.Key("conflict-name"), &p.name).Placeholder("另存名称（仅文件名）").FillWidth()
+			textInput(c.Key("conflict-name"), &p.name).Placeholder("另存名称（仅文件名）").FillWidth()
 			ui.Checkbox(c.Key("conflict-apply-all"), &p.applyAll, "覆盖或跳过应用到本批次")
 			answer := func(choice transfer.Choice) {
 				p.reply <- transfer.Decision{Choice: choice, Name: p.name, ApplyAll: p.applyAll}

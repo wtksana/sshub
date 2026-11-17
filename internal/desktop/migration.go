@@ -178,16 +178,16 @@ func (a *app) migrationView(c *ui.Context) {
 	ui.DialogBase(c.Key("migration-dialog"), &open, func(backdrop, panel ui.Element) {
 		t := c.Theme()
 		backdrop.Background(ui.RGBA(0, 0, 0, .35))
-		panel.Width(670).MaxWidthPercent(94).MaxHeightPercent(92).Padding(20).Gap(12).Radius(6).Background(t.Background).Border(1, t.Border)
+		dialogStyle(c, panel, 670)
 		title := "导入配置"
 		if e.export {
 			title = "导出配置"
 		}
-		ui.Text(c, title).FontSize(18).Bold()
-		ui.Text(c, "包含连接、分组、收藏与偏好；不包含密码、口令、私钥内容、凭据引用、主机信任或工作区布局。").FontSize(11).TextColor(t.TextMuted).Wrap()
+		ui.Text(c, title).FontSize(typeSize(c, 5)).Bold()
+		ui.Text(c, "包含连接、分组、收藏与偏好；不包含密码、口令、私钥内容、凭据引用、主机信任或工作区布局。").FontSize(typeSize(c, -2)).TextColor(t.TextMuted).Wrap()
 		ui.Row(c).Gap(8).FillWidth().Children(func() {
 			before := e.path
-			ui.TextInput(c.Key("migration-path"), &e.path).Label("配置文件路径").Placeholder("JSON 文件路径").Grow(1).Disabled(e.busy || e.plan != nil || e.confirmPath != "")
+			textInput(c.Key("migration-path"), &e.path).Label("配置文件路径").Placeholder("JSON 文件路径").Grow(1).Disabled(e.busy || e.plan != nil || e.confirmPath != "")
 			if e.path != before {
 				e.confirmPath = ""
 			}
@@ -205,26 +205,26 @@ func (a *app) migrationView(c *ui.Context) {
 							group = "未分组"
 						}
 						ui.Text(c, p.Name+" · "+group).Bold().Wrap()
-						ui.Text(c, fmt.Sprintf("%s@%s:%d · %s", p.Username, p.Host, p.Port, authLabel(p.Auth))).FontSize(11).Wrap()
+						ui.Text(c, fmt.Sprintf("%s@%s:%d · %s", p.Username, p.Host, p.Port, authLabel(p.Auth))).FontSize(typeSize(c, -2)).Wrap()
 						if p.IdentityNeedsReview {
-							ui.Text(c, "私钥路径待核对，确认前不能连接").FontSize(11).Wrap()
+							ui.Text(c, "私钥路径待核对，确认前不能连接").FontSize(typeSize(c, -2)).Wrap()
 						}
 						options := []string{"新增", "跳过"}
 						if row.Conflict {
 							options = []string{"请选择", "跳过", "另存", "替换"}
-							ui.Text(c, "同组重名：替换仅更新配置，现有会话保留原配置").FontSize(11).Wrap()
+							ui.Text(c, "同组重名：替换仅更新配置，现有会话保留原配置").FontSize(typeSize(c, -2)).Wrap()
 						}
 						ui.Row(c).Gap(8).FillWidth().Children(func() {
 							ui.Select(key("choice"), &e.choices[i], options).Width(135)
 							if e.choices[i] == "另存" {
-								ui.TextInput(key("name"), &e.names[i]).Label("另存名称").Grow(1)
+								textInput(key("name"), &e.names[i]).Label("另存名称").Grow(1)
 							}
 						})
 					})
 				}
 			})
 			if e.plan.Preferences != nil {
-				ui.Checkbox(c.Key("import-preferences"), &e.applyPreferences, "同时导入主题和终端默认设置").Disabled(e.busy)
+				ui.Checkbox(c.Key("import-preferences"), &e.applyPreferences, "同时导入外观、界面和终端默认设置").Disabled(e.busy)
 			}
 		}
 		if e.confirmPath != "" {
@@ -234,7 +234,7 @@ func (a *app) migrationView(c *ui.Context) {
 			ui.Text(c, e.err).TextColor(t.Danger).Wrap()
 		}
 		if e.busy {
-			ui.Text(c, "正在处理…").FontSize(11)
+			ui.Text(c, "正在处理…").FontSize(typeSize(c, -2))
 		}
 		ui.Row(c).Gap(8).Justify(ui.End).Children(func() {
 			ui.Button(c.Key("migration-cancel"), "取消").Disabled(e.busy).OnClick(func() { a.migration = nil })

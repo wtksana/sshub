@@ -37,10 +37,9 @@ func (a *app) sessionDialogs(c *ui.Context) {
 		a.win.Close()
 	}
 	ui.DialogBase(c.Key("trusted-hosts"), &a.manageHosts, func(backdrop, panel ui.Element) {
-		t := c.Theme()
 		backdrop.Background(ui.RGBA(0, 0, 0, 0.35))
-		panel.Width(650).MaxWidthPercent(94).MaxHeightPercent(90).Padding(20).Gap(12).Background(t.Background).Border(1, t.Border).Radius(8)
-		ui.Text(c, "已信任主机").FontSize(18).Bold()
+		dialogStyle(c, panel, 650)
+		ui.Text(c, "已信任主机").FontSize(typeSize(c, 5)).Bold()
 		ui.Scroll(c).MaxHeight(400).Gap(12).Children(func() {
 			if len(a.hosts) == 0 {
 				ui.Text(c, "暂无主机信任记录")
@@ -48,7 +47,7 @@ func (a *app) sessionDialogs(c *ui.Context) {
 			for i, host := range a.hosts {
 				ui.Column(c.Key(i)).Gap(5).Children(func() {
 					ui.Text(c, host.Address+" · "+host.Algorithm).Bold().Wrap()
-					ui.Text(c, host.Fingerprint).FontSize(12).Wrap()
+					ui.Text(c, host.Fingerprint).FontSize(typeSize(c, -1)).Wrap()
 					ui.Button(c.Key("forget-host-"+host.Address), "移除信任").OnClick(func() {
 						a.forgetHost, a.confirmForgetHost, a.manageHosts = host.Address, true, false
 					})

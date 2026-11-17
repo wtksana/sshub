@@ -43,7 +43,7 @@ func main() {
 			case <-done:
 				return
 			case <-ticker.C:
-				stats, _ := json.Marshal(map[string]any{"at": time.Now(), "shells": s.ShellCount.Load(), "sent_bytes": s.SentBytes.Load(), "load": s.LoadEnabled.Load()})
+				stats, _ := json.Marshal(map[string]any{"at": time.Now(), "shells": s.ShellCount.Load(), "sftp_requests": s.SFTPRequests.Load(), "sent_bytes": s.SentBytes.Load(), "load": s.LoadEnabled.Load()})
 				tmp := filepath.Join(*dir, "stats.tmp")
 				if os.WriteFile(tmp, stats, 0600) == nil {
 					os.Rename(tmp, filepath.Join(*dir, "stats.json"))

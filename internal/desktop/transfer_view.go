@@ -1,6 +1,7 @@
 package desktop
 
 import (
+	"cmp"
 	"fmt"
 	"path"
 	"path/filepath"
@@ -14,6 +15,9 @@ func (a *app) transferView(c *ui.Context) {
 	t := c.Theme()
 	ui.Row(c).FillWidth().Children(func() {
 		ui.Text(c, "传输队列").Bold().Grow(1)
+		if len(a.transfers) > 0 {
+			ui.Textf(c, "%d", len(a.transfers)).FontSize(typeSize(c, -2)).TextColor(t.TextMuted)
+		}
 		iconButton(c.Key("transfers-menu"), iconMore, "传输队列操作").Menu(func(m *ui.Menu) {
 			if m.Item("清除已结束任务").ID("transfers-clear").Chosen() {
 				a.transfers = slices.DeleteFunc(a.transfers, func(task *transferTask) bool { return task.cancel == nil })
@@ -28,16 +32,29 @@ func (a *app) transferView(c *ui.Context) {
 		})
 	})
 	if len(a.transfers) == 0 {
-		ui.Text(c, "暂无传输任务").FontSize(12).TextColor(t.TextMuted)
+		ui.Text(c, "暂无传输任务").FontSize(typeSize(c, -1)).TextColor(t.TextMuted).Padding(8, 0)
 		return
 	}
 	ui.Scroll(c.Key("transfer-list")).MaxHeight(220).FillWidth().Gap(8).Children(func() {
-		for _, task := range a.transfers {
+		tasks := slices.Clone(a.transfers)
+		slices.SortStableFunc(tasks, func(x, y *transferTask) int {
+			if (x.cancel != nil) != (y.cancel != nil) {
+				if x.cancel != nil {
+					return -1
+				}
+				return 1
+			}
+			if x.cancel == nil {
+				return cmp.Compare(y.id, x.id)
+			}
+			return cmp.Compare(x.id, y.id)
+		})
+		for _, task := range tasks {
 			label, direction, icon := path.Base(task.request.Source), "下载", iconDownload
 			if task.request.Upload {
 				label, direction, icon = filepath.Base(task.request.Source), "上传", iconUpload
 			}
-			ui.Column(c.Key(fmt.Sprintf("transfer-%d", task.id))).Label("传输任务 " + direction + " " + label).Gap(3).ContextMenu(func(m *ui.Menu) {
+			ui.Column(c.Key(fmt.Sprintf("transfer-%d", task.id))).Label("传输任务 "+direction+" "+label).FillWidth().Padding(10).Gap(6).Radius(8).Background(t.Background).Border(1, t.Border).ContextMenu(func(m *ui.Menu) {
 				if m.Item("取消传输").ID("transfer-cancel").Disabled(task.cancel == nil).Chosen() {
 					a.cancelTransfer(task)
 				}
@@ -47,25 +64,39 @@ func (a *app) transferView(c *ui.Context) {
 			}).Children(func() {
 				ui.Row(c).Gap(5).AlignItems(ui.Center).Children(func() {
 					ui.Icon(c, icon).Size(16, 16).Shrink(0).TextColor(t.TextMuted)
-					ui.Text(c, label).FontSize(12).Bold().Wrap()
+					ui.Text(c, label).Bold().SingleLine().Grow(1).MinWidth(0).Tooltip(label)
+					color := t.TextMuted
+					switch task.status {
+					case "已完成":
+						color = t.Success
+					case "失败", "传输失败":
+						color = t.Danger
+					case "已取消":
+						color = t.Warning
+					}
+					if task.err != "" {
+						color = t.Danger
+					}
+					ui.Text(c, task.status).FontSize(typeSize(c, -2)).TextColor(color).Shrink(0).Padding(2, 5).Radius(4).Background(t.Surface)
 				})
-				ui.Text(c, task.server+" · "+task.status).FontSize(12).Wrap()
-				ui.Text(c, task.request.Destination).FontSize(11).TextColor(t.TextMuted).Wrap()
+				ui.Text(c, task.server).FontSize(typeSize(c, -2)).TextColor(t.TextMuted).SingleLine()
+				ui.Text(c, task.request.Destination).FontSize(typeSize(c, -2)).TextColor(t.TextMuted).SingleLine().Tooltip(task.request.Destination)
 				if task.progress.Files == 1 && task.progress.Destination != "" && task.progress.Destination != task.request.Destination {
-					ui.Text(c, "已保存："+task.progress.Destination).FontSize(11).TextColor(t.TextMuted).Wrap()
+					ui.Text(c, "已保存："+task.progress.Destination).FontSize(typeSize(c, -2)).TextColor(t.TextMuted).Wrap()
 				}
 				if task.progress.Bytes > 0 || task.status == "已完成" {
 					summary := fmt.Sprintf("%s · %d 文件 · %d 跳过", bytesText(task.progress.Bytes), task.progress.Files, task.progress.Skipped)
 					if task.cancel != nil && !task.started.IsZero() {
 						summary += " · " + bytesText(int64(float64(task.progress.Bytes)/max(.1, time.Since(task.started).Seconds()))) + "/s"
 					}
-					ui.Text(c, summary).FontSize(11).TextColor(t.TextMuted).Wrap()
+					ui.Text(c, summary).FontSize(typeSize(c, -2)).TextColor(t.TextMuted).Wrap()
 					if task.cancel != nil && task.progress.CurrentTotal > 0 {
-						ui.Text(c, fmt.Sprintf("%s · %.0f%%", path.Base(task.progress.Path), float64(task.progress.CurrentBytes)*100/float64(task.progress.CurrentTotal))).FontSize(11).TextColor(t.TextMuted).Wrap()
+						ui.Progress(c, min(1, float64(task.progress.CurrentBytes)/float64(task.progress.CurrentTotal))).FillWidth().Height(4)
+						ui.Text(c, fmt.Sprintf("当前文件 %s · %.0f%%", path.Base(task.progress.Path), float64(task.progress.CurrentBytes)*100/float64(task.progress.CurrentTotal))).FontSize(typeSize(c, -2)).TextColor(t.TextMuted).Wrap()
 					}
 				}
 				if task.err != "" {
-					ui.Text(c, task.err).FontSize(11).TextColor(t.Danger).Wrap()
+					ui.Text(c, task.err).FontSize(typeSize(c, -2)).TextColor(t.Danger).Wrap()
 				}
 			})
 		}

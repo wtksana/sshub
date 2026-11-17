@@ -33,6 +33,7 @@ type Server struct {
 	WriteLimit                  int64
 	LoadEnabled                 atomic.Bool
 	ShellCount                  atomic.Int64
+	SFTPRequests                atomic.Uint64
 	SentBytes                   atomic.Uint64
 }
 
@@ -221,6 +222,7 @@ func (s *Server) channel(incoming ssh.NewChannel) {
 				req.Reply(false, nil)
 				continue
 			}
+			s.SFTPRequests.Add(1)
 			root, err := os.OpenRoot(s.Root)
 			if err != nil {
 				req.Reply(false, nil)
