@@ -26,13 +26,16 @@ func TestHighlightPreferencesOwnSnapshotsAndMigration(t *testing.T) {
 		p.LogHighlight.Builtins[i].Enabled = false
 	}
 	p.LogHighlight.Builtins[0].LightColor = "#123456"
+	p.LogHighlight.Custom = []CustomHighlightRule{{Kind: "keyword", Pattern: "性能", Enabled: true, Color: "#123456"}, {Kind: "regex", Pattern: `"id":[0-9]+`, CaseSensitive: true, Color: "#ABCDEF"}}
 	want := p.Clone()
 	if err := s.SavePreferences(p); err != nil {
 		t.Fatal(err)
 	}
 	p.LogHighlight.Builtins[0].Enabled = true
+	p.LogHighlight.Custom[0].Pattern = "changed"
 	copy := s.Preferences()
 	copy.LogHighlight.Builtins[0].LightColor = "#654321"
+	copy.LogHighlight.Custom[0].Color = "#654321"
 	if !reflect.DeepEqual(s.Preferences(), want) {
 		t.Fatal("caller can mutate stored presets")
 	}
@@ -56,6 +59,7 @@ func TestHighlightPreferencesOwnSnapshotsAndMigration(t *testing.T) {
 	}
 	m.Preferences.LogHighlight.Builtins[0].LightColor = "#000000"
 	plan.Preferences.LogHighlight.Builtins[0].Enabled = true
+	plan.Preferences.LogHighlight.Custom[0], plan.Preferences.LogHighlight.Custom[1] = plan.Preferences.LogHighlight.Custom[1], plan.Preferences.LogHighlight.Custom[0]
 	plan.Preferences.LogHighlight.Builtins[0], plan.Preferences.LogHighlight.Builtins[1] = plan.Preferences.LogHighlight.Builtins[1], plan.Preferences.LogHighlight.Builtins[0]
 	if _, err = dst.CommitImport(plan, nil, true); err != nil {
 		t.Fatal(err)
@@ -69,6 +73,7 @@ func TestHighlightPreferencesOwnSnapshotsAndMigration(t *testing.T) {
 func TestInvalidHighlightPreferencesNeverApply(t *testing.T) {
 	s := openTestStore(t, t.TempDir())
 	want := highlightPreferences()
+	want.LogHighlight.Custom = []CustomHighlightRule{{Kind: "keyword", Pattern: "old", Enabled: true, Color: "#123456"}}
 	if err := s.SavePreferences(want); err != nil {
 		t.Fatal(err)
 	}
@@ -85,6 +90,37 @@ func TestInvalidHighlightPreferencesNeverApply(t *testing.T) {
 		func(p *LogHighlightPreferences) { p.Builtins[0].LightColor = "#12345678" },
 		func(p *LogHighlightPreferences) { p.Builtins[0].DarkColor = "#12345G" },
 		func(p *LogHighlightPreferences) { p.Builtins[0].DarkColor = "#12+345" },
+		func(p *LogHighlightPreferences) {
+			p.Custom = []CustomHighlightRule{{Kind: "json", Pattern: "x", Color: "#123456"}}
+		},
+		func(p *LogHighlightPreferences) {
+			p.Custom = []CustomHighlightRule{{Kind: "keyword", Pattern: "", Color: "#123456"}}
+		},
+		func(p *LogHighlightPreferences) {
+			p.Custom = []CustomHighlightRule{{Kind: "regex", Pattern: "[", Color: "#123456"}}
+		},
+		func(p *LogHighlightPreferences) {
+			p.Custom = []CustomHighlightRule{{Kind: "regex", Pattern: `(a)\1`, Color: "#123456"}}
+		},
+		func(p *LogHighlightPreferences) {
+			p.Custom = []CustomHighlightRule{{Kind: "regex", Pattern: `(?=x)`, Color: "#123456"}}
+		},
+		func(p *LogHighlightPreferences) {
+			p.Custom = []CustomHighlightRule{{Kind: "regex", Pattern: `(?:a?){1000}b`, Color: "#123456"}}
+		},
+		func(p *LogHighlightPreferences) {
+			p.Custom = []CustomHighlightRule{{Kind: "keyword", Pattern: "x", Color: "red"}}
+		},
+		func(p *LogHighlightPreferences) {
+			for range 33 {
+				p.Custom = append(p.Custom, CustomHighlightRule{Kind: "keyword", Pattern: "x", Color: "#123456"})
+			}
+		},
+		func(p *LogHighlightPreferences) {
+			for range 8 {
+				p.Custom = append(p.Custom, CustomHighlightRule{Kind: "regex", Pattern: `(?:a|aa){30}b`, Color: "#123456"})
+			}
+		},
 	} {
 		bad := want.Clone()
 		change(bad.LogHighlight)
@@ -108,6 +144,7 @@ func TestInvalidHighlightPreferencesNeverApply(t *testing.T) {
 	}
 	next := want.Clone()
 	next.LogHighlight.Builtins[0].Enabled = false
+	next.LogHighlight.Custom[0].Pattern = "new"
 	if s.SavePreferences(next) == nil || !reflect.DeepEqual(s.Preferences(), want) {
 		t.Fatal("failed write changed active presets")
 	}

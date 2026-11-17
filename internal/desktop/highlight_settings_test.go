@@ -134,3 +134,38 @@ func TestBuiltinHighlightPublishOwnsSnapshotAndPreservesSwitch(t *testing.T) {
 		}
 	}
 }
+
+func TestCustomHighlightPriorityCaseAndDraftIsolation(t *testing.T) {
+	p := library.DefaultPreferences()
+	config := p.EffectiveLogHighlight()
+	p.LogHighlight = &config
+	config.Custom = []library.CustomHighlightRule{{Kind: "keyword", Pattern: "error", Enabled: true, Color: "#010203"}, {Kind: "regex", Pattern: `"id":[0-9]+`, CaseSensitive: true, Enabled: true, Color: "#040506"}, {Kind: "keyword", Pattern: "[X]", Enabled: true, CaseSensitive: true, Color: "#070809"}}
+	input := `ERROR errors {"id":12} [X] [x]` + "\n"
+	want := "\x1b[38;2;1;2;3mERROR\x1b[39m \x1b[38;2;1;2;3merror\x1b[39ms {\x1b[38;2;4;5;6m\"id\":12\x1b[39m} \x1b[38;2;7;8;9m[X]\x1b[39m [x]\n"
+	if got := renderSettingsHighlight(t, p, input, 1, false); got != want {
+		t.Fatalf("keyword/regex priority: %q", got)
+	}
+	a := newApp(t.TempDir())
+	defer a.close()
+	a.applyPreferences(p, false)
+	a.beginSettings()
+	a.settings.preferences.LogHighlight.Custom[0].Pattern = "changed"
+	view := ui.NewTester(a.settingsView, 900, 700)
+	view.Frame()
+	if err := view.Click("取消"); err != nil {
+		t.Fatal(err)
+	}
+	if a.preferences.LogHighlight.Custom[0].Pattern != "error" {
+		t.Fatal("cancel leaked custom draft")
+	}
+	a.beginSettings()
+	a.settings.preferences.LogHighlight.Custom[0].Pattern = ""
+	a.saveSettings(a.settings)
+	if a.settings.err == "" || a.settings.busy || a.preferences.LogHighlight.Custom[0].Pattern != "error" {
+		t.Fatal("invalid custom draft applied")
+	}
+	config.Custom[0].Pattern = "mutated"
+	if a.preferences.LogHighlight.Custom[0].Pattern != "error" {
+		t.Fatal("caller changed published custom snapshot")
+	}
+}
