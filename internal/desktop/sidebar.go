@@ -15,8 +15,8 @@ func (a *app) sidebar(c *ui.Context) {
 	ui.Column(c).Fill().Clip().Padding(8).Gap(6).Children(func() {
 		ui.Row(c).AlignItems(ui.Center).Children(func() {
 			ui.Text(c, "连接库").Bold().Grow(1)
-			ui.Button(c.Key("new-profile"), "+").Label("新建连接").Tooltip("新建连接").Padding(3, 7).Background(ui.Transparent).BorderWidth(0).OnClick(func() { a.beginEdit(library.Profile{}) })
-			ui.Button(c.Key("connection-filter"), "⋯").Label("筛选连接").Tooltip("筛选连接").Padding(3, 7).Background(ui.Transparent).BorderWidth(0).Menu(a.filterMenu)
+			iconButton(c.Key("new-profile"), iconPlus, "新建连接").OnClick(func() { a.beginEdit(library.Profile{}) })
+			iconButton(c.Key("connection-filter"), iconFilter, "筛选连接").Menu(a.filterMenu)
 		})
 		ui.TextInput(c.Key("search-profiles"), &a.query).Label("搜索连接").Placeholder("搜索名称、地址、用户名…").FillWidth()
 		if a.group != "全部分组" && a.group != "未分组" && !slices.Contains(library.Groups(a.profiles), strings.TrimPrefix(a.group, "分组：")) {
@@ -55,11 +55,12 @@ func (a *app) sidebar(c *ui.Context) {
 			}
 			row.Children(func() {
 				ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
-					name := p.Name
-					if p.Favorite {
-						name = "★ " + name
-					}
-					ui.Text(c, name).Bold().SingleLine()
+					ui.Row(c).Gap(5).AlignItems(ui.Center).Children(func() {
+						if p.Favorite {
+							ui.Icon(c, iconStar).Size(14, 14).Shrink(0).TextColor(t.TextMuted)
+						}
+						ui.Text(c, p.Name).Bold().SingleLine()
+					})
 					ui.Text(c, p.Username+"@"+net.JoinHostPort(p.Host, strconv.Itoa(p.Port))).FontSize(11).SingleLine()
 				})
 			}).OnClick(func() { a.selected = p.ID })

@@ -65,9 +65,9 @@ func (a *app) terminalSearch(c *ui.Context, tab *workspace) {
 			c.After(16 * time.Millisecond)
 		}
 		ui.Text(key("terminal-matches"), label).FontSize(10)
-		ui.Button(key("search-previous"), "上一处").FontSize(10).Padding(4).OnClick(tab.term.SearchPrevious)
-		ui.Button(key("search-next"), "下一处").FontSize(10).Padding(4).OnClick(tab.term.SearchNext)
-		ui.Button(key("search-close"), "关闭搜索").FontSize(10).Padding(4).OnClick(func() {
+		iconButton(key("search-previous"), iconPrevious, "上一处").OnClick(tab.term.SearchPrevious)
+		iconButton(key("search-next"), iconNext, "下一处").OnClick(tab.term.SearchNext)
+		iconButton(key("search-close"), iconClose, "关闭搜索").OnClick(func() {
 			tab.searchOpen = false
 			tab.term.EndSearch()
 			tab.searchApplied = ""

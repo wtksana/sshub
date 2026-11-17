@@ -12,3 +12,9 @@ Ghostty DLL 固定在 MyGo v0.9.1 的 `plugins/terminal/mygo-plugin.json` 指定
 - simdutf 按 `pkg/simdutf/build.zig.zon` 的 5.2.8 许可文本；Highway 许可来自 google/highway，实际 vendored shim 标明 `66486a10623fa0d72fe91260f96c892e41aceb06` 且有本地修改；Wuffs 双许可文本来自上游。许可与告知均保留，不宣称拥有这些组件。
 
 升级依赖时需要重新核对 EXE 模块列表、DLL 源码版本、许可与哈希。此目录会随便携包完整分发。
+
+## Lucide 图标
+
+界面使用 Lucide 的 18 个 SVG，来自官方仓库固定提交 [`f8feea7a02ea461c9f2a4b4d851512aae6ec933f`](https://github.com/lucide-icons/lucide/tree/f8feea7a02ea461c9f2a4b4d851512aae6ec933f/icons)。源文件位于 `internal/desktop/icons/lucide/`，未经修改，通过 Go embed 内嵌；MyGo 原生绘制，运行时无需访问 Iconify 或 Lucide。图标名与用途见该目录的 README。
+
+完整上游许可保存在 `Lucide-LICENSE.txt`，包含 Lucide ISC 及源自 Feather 图标的 MIT 告知。它是资源许可，不加入仅记录 Go 链接模块的 `manifest.json`；打包脚本会随本目录分发。

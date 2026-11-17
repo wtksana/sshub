@@ -101,7 +101,7 @@ func (a *app) files(c *ui.Context) {
 		ui.Row(c).FillWidth().Gap(6).Children(func() {
 			ui.Text(c, "文件").Bold().Grow(1)
 			if tab != nil {
-				ui.MenuButton(c.Key("files-menu"), "…", func(m *ui.Menu) { a.directoryMenu(m, tab) }).Tooltip("文件操作")
+				iconButton(c.Key("files-menu"), iconMore, "文件操作").Menu(func(m *ui.Menu) { a.directoryMenu(m, tab) })
 			}
 		})
 		status := "未连接服务器"
@@ -125,7 +125,10 @@ func (a *app) files(c *ui.Context) {
 				ui.Text(c.Key("files-error"), tab.files.err).TextColor(t.Danger).FontSize(12).Wrap()
 			}
 			if tab.files.path != "" {
-				ui.Button(c.Key("remote-parent"), "../").FillWidth().OnClick(func() { a.browse(tab, path.Dir(tab.files.path)) })
+				ui.Button(c.Key("remote-parent"), "").Label("上级目录").FillWidth().Children(func() {
+					ui.Icon(c, iconParent).Size(16, 16).Shrink(0)
+					ui.Text(c, "../")
+				}).OnClick(func() { a.browse(tab, path.Dir(tab.files.path)) })
 			}
 			zone := ui.List(c.Key("remote-files"), nil, len(tab.files.entries), func(i int) {
 				entry := tab.files.entries[i]
@@ -133,15 +136,19 @@ func (a *app) files(c *ui.Context) {
 				if !connection.ValidName(name) {
 					return
 				}
-				label := name
+				label, icon := name, iconFile
 				if entry.IsDir() {
 					label += "/"
+					icon = iconFolder
 				}
 				if entry.Mode()&os.ModeSymlink != 0 {
-					label += " ↗"
+					icon = iconSymlink
 				}
 				target := path.Join(tab.files.path, name)
-				row := ui.Button(c.Key(fmt.Sprintf("remote-entry-%d", i)), label).FillWidth().Tooltip(entry.Mode().String() + " · " + bytesText(entry.Size())).ContextMenu(func(m *ui.Menu) { a.entryMenu(m, tab, target, entry) })
+				row := ui.Button(c.Key(fmt.Sprintf("remote-entry-%d", i)), "").Label(label).FillWidth().Justify(ui.Start).Tooltip(entry.Mode().String() + " · " + bytesText(entry.Size())).ContextMenu(func(m *ui.Menu) { a.entryMenu(m, tab, target, entry) }).Children(func() {
+					ui.Icon(c, icon).Size(16, 16).Shrink(0).TextColor(t.TextMuted)
+					ui.Text(c, label).SingleLine()
+				})
 				if row.DoubleClicked() && entry.IsDir() {
 					a.browse(tab, target)
 				}

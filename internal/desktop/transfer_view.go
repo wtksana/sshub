@@ -14,7 +14,7 @@ func (a *app) transferView(c *ui.Context) {
 	t := c.Theme()
 	ui.Row(c).FillWidth().Children(func() {
 		ui.Text(c, "传输队列").Bold().Grow(1)
-		ui.MenuButton(c.Key("transfers-menu"), "…", func(m *ui.Menu) {
+		iconButton(c.Key("transfers-menu"), iconMore, "传输队列操作").Menu(func(m *ui.Menu) {
 			if m.Item("清除已结束任务").ID("transfers-clear").Chosen() {
 				a.transfers = slices.DeleteFunc(a.transfers, func(task *transferTask) bool { return task.cancel == nil })
 			}
@@ -33,13 +33,11 @@ func (a *app) transferView(c *ui.Context) {
 	}
 	ui.Scroll(c.Key("transfer-list")).MaxHeight(220).FillWidth().Gap(8).Children(func() {
 		for _, task := range a.transfers {
-			label := "↓ "
+			label, direction, icon := path.Base(task.request.Source), "下载", iconDownload
 			if task.request.Upload {
-				label = "↑ " + filepath.Base(task.request.Source)
-			} else {
-				label += path.Base(task.request.Source)
+				label, direction, icon = filepath.Base(task.request.Source), "上传", iconUpload
 			}
-			ui.Column(c.Key(fmt.Sprintf("transfer-%d", task.id))).Label("传输任务 " + label).Gap(3).ContextMenu(func(m *ui.Menu) {
+			ui.Column(c.Key(fmt.Sprintf("transfer-%d", task.id))).Label("传输任务 " + direction + " " + label).Gap(3).ContextMenu(func(m *ui.Menu) {
 				if m.Item("取消传输").ID("transfer-cancel").Disabled(task.cancel == nil).Chosen() {
 					a.cancelTransfer(task)
 				}
@@ -47,7 +45,10 @@ func (a *app) transferView(c *ui.Context) {
 					a.retryTransfer(task)
 				}
 			}).Children(func() {
-				ui.Text(c, label).FontSize(12).Bold().Wrap()
+				ui.Row(c).Gap(5).AlignItems(ui.Center).Children(func() {
+					ui.Icon(c, icon).Size(16, 16).Shrink(0).TextColor(t.TextMuted)
+					ui.Text(c, label).FontSize(12).Bold().Wrap()
+				})
 				ui.Text(c, task.server+" · "+task.status).FontSize(12).Wrap()
 				ui.Text(c, task.request.Destination).FontSize(11).TextColor(t.TextMuted).Wrap()
 				if task.progress.Files == 1 && task.progress.Destination != "" && task.progress.Destination != task.request.Destination {

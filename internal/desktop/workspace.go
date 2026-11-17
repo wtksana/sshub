@@ -61,7 +61,7 @@ func (a *app) pane(c *ui.Context, pane *layout.Node) {
 									} else if tab.status == "连接中" {
 										color = t.Warning
 									}
-									ui.Text(c, "●").FontSize(8).TextColor(color)
+									ui.Icon(c, iconStatus).Size(8, 8).Shrink(0).TextColor(color)
 									ui.Text(c, tab.profile.Name).FontSize(12).SingleLine()
 								})
 							})
@@ -71,12 +71,12 @@ func (a *app) pane(c *ui.Context, pane *layout.Node) {
 							}
 							b.OnClick(func() { a.layout.Activate(tab.key); a.terminalFocus = tab.key })
 							b.ContextMenu(func(m *ui.Menu) { a.paneMenu(m, pane, tab) })
-							ui.Button(c.Key(fmt.Sprintf("close-tab-%d", tab.key)), "×").FontSize(12).Padding(3, 6).Radius(0).Background(ui.Transparent).BorderWidth(0).Label("关闭工作区 " + tab.profile.Name).OnClick(func() { a.requestClose(tab) })
+							iconButton(c.Key(fmt.Sprintf("close-tab-%d", tab.key)), iconClose, "关闭工作区 "+tab.profile.Name).Size(24, 24).FontSize(14).Radius(0).OnClick(func() { a.requestClose(tab) })
 						})
 					}
 				})
 			})
-			ui.Button(c.Key(fmt.Sprintf("pane-menu-%d", pane.ID)), "…").Label("窗格操作").Tooltip("会话与分屏操作").Radius(0).Padding(4, 9).Background(ui.Transparent).BorderWidth(0).Menu(func(m *ui.Menu) { a.paneMenu(m, pane, a.workspaceByID(pane.Active)) })
+			iconButton(c.Key(fmt.Sprintf("pane-menu-%d", pane.ID)), iconMore, "窗格操作").Tooltip("会话与分屏操作").Radius(0).Menu(func(m *ui.Menu) { a.paneMenu(m, pane, a.workspaceByID(pane.Active)) })
 		})
 		line := t.Border
 		if a.layout.ActivePane == pane.ID {

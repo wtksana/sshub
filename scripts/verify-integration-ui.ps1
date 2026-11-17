@@ -93,8 +93,8 @@ try {
     UI press key=files-menu --settle | Out-Null
     UI press 'key={files-upload}' --settle | Out-Null
     Read-Host 'Select both generated sources in the native picker, then immediately press Enter here' | Out-Null
-    Wait-Text '↑ 持续上传 中文.bin'
-    Wait-Text '↑ 排队上传.txt'
+    Wait-Text '传输任务 上传 持续上传 中文.bin'
+    Wait-Text '传输任务 上传 排队上传.txt'
     $before = Get-ProductSnapshot
     if ($before -notmatch '集成服务器 A · 传输中' -or $before -notmatch '集成服务器 A · 等待中') { throw 'Expected both an active and a queued upload at focus switch; rerun with slower fixture' }
     $before | Set-Content -Encoding utf8 (Join-Path $directory 'before-focus-switch.txt')
