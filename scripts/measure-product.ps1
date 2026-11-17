@@ -1,5 +1,13 @@
 #requires -Version 7.5
-param([int]$Seconds = 600, [ValidateSet(1,8)][int]$Sessions = 8, [switch]$SkipBuild, [string]$Executable = 'build/windows-amd64/SSHub.exe')
+param(
+    [ValidateRange(1, 3600)][int]$Seconds = 600,
+    [ValidateSet(1,8)][int]$Sessions = 8,
+    [switch]$SkipBuild,
+    [string]$Executable = 'build/windows-amd64/SSHub.exe',
+    [ValidateSet(2,8,32,64)][int]$ScrollbackMiB = 2,
+    [switch]$Highlight,
+    [string]$PreferencesFile
+)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 Push-Location $root
@@ -30,7 +38,10 @@ try {
     $profiles = @(0..99 | ForEach-Object {
         @{id="perf-$_";name=('性能服务器-{0:d3}' -f $_);host='127.0.0.1';port=$portNumber;username='test';auth='private_key';identity_path=$server.identity;group=$(if ($_ % 2) {'生产'} else {'测试'});favorite=($_ % 10 -eq 0)}
     })
-    @{version=1;profiles=$profiles} | ConvertTo-Json -Depth 6 | Set-Content -Encoding utf8 (Join-Path $dataDir 'connections.json')
+    $preferences = @{theme='system';font_family='Cascadia Mono';font_size=13}
+    if ($PreferencesFile) { $preferences = Get-Content -Raw $PreferencesFile | ConvertFrom-Json -AsHashtable }
+    $preferences['scrollback_mib'] = $ScrollbackMiB
+    @{version=1;profiles=$profiles;preferences=$preferences} | ConvertTo-Json -Depth 12 | Set-Content -Encoding utf8 (Join-Path $dataDir 'connections.json')
     # Explicitly pinned public key from the isolated fixture, never user servers.
     $server.known_host | Set-Content -Encoding utf8 (Join-Path $dataDir 'known_hosts')
     if ($Sessions -eq 8) {
@@ -41,7 +52,7 @@ try {
         ConvertTo-Json -Depth 10 | Set-Content -Encoding utf8 (Join-Path $dataDir 'workspace.json')
     $exe = [IO.Path]::GetFullPath((Join-Path $root $Executable))
     $diagnosticPath = Join-Path $directory 'diagnostics.jsonl'
-    $environment = @{at=(Get-Date).ToString('o');commit=(git rev-parse HEAD);exe_sha256=(Get-FileHash $exe).Hash;dll_sha256=(Get-FileHash (Join-Path (Split-Path $exe) 'ghostty-vt.dll')).Hash;go=(go version);os=(Get-CimInstance Win32_OperatingSystem | Select-Object Caption,Version,TotalVisibleMemorySize);cpu=(Get-CimInstance Win32_Processor | Select-Object Name,NumberOfLogicalProcessors);sessions=$Sessions;seconds=$Seconds;window_dip='1280x800';font='Cascadia Mono 13';scrollback_bytes=2097152;line_bytes=101;lines_per_second_per_session=1000;visible_panes=$(if ($Sessions -eq 8) {4} else {1})}
+    $environment = @{at=(Get-Date).ToString('o');commit=(git rev-parse HEAD);exe_sha256=(Get-FileHash $exe).Hash;dll_sha256=(Get-FileHash (Join-Path (Split-Path $exe) 'ghostty-vt.dll')).Hash;go=(go version);os=(Get-CimInstance Win32_OperatingSystem | Select-Object Caption,Version,TotalVisibleMemorySize);cpu=(Get-CimInstance Win32_Processor | Select-Object Name,NumberOfLogicalProcessors);sessions=$Sessions;seconds=$Seconds;window_dip='1280x800';font=($preferences.font_family + ' ' + $preferences.font_size);scrollback_bytes=($ScrollbackMiB*1MB);highlight=[bool]$Highlight;preferences=$preferences;line_bytes=101;lines_per_second_per_session=1000;visible_panes=$(if ($Sessions -eq 8) {4} else {1})}
     $environment | ConvertTo-Json -Depth 6 | Set-Content -Encoding utf8 (Join-Path $directory 'environment.json')
     $start = [Diagnostics.ProcessStartInfo]::new()
     $start.FileName=$exe; $start.UseShellExecute=$false; $start.CreateNoWindow=$true
@@ -50,7 +61,8 @@ try {
     $launched = [DateTimeOffset]::Now
     $appProcess=[Diagnostics.Process]::Start($start)
     @{directory=$directory;pid=$appProcess.Id;sessions=$Sessions;status='awaiting_connections'} | ConvertTo-Json | Set-Content -Encoding utf8 'artifacts/product-performance/active.json'
-    Write-Host "Connect $Sessions restored tabs using the actual release UI; fixture key is pinned. $directory"
+    Write-Host "Connect $Sessions restored tabs using the actual release UI; fixture key is pinned. Highlight: $([bool]$Highlight). $directory"
+    if ($Highlight) { Write-Host 'Enable log highlighting through the actual terminal menus in every connected tab.' }
     $timer.Restart()
     $phase='connecting';$phaseStarted=[DateTimeOffset]::Now
     $lastCPU=$appProcess.TotalProcessorTime.TotalSeconds;$lastAt=[DateTimeOffset]::Now
@@ -67,11 +79,12 @@ try {
         }
         $received=0
         if ($latest) {foreach ($bytes in $latest.received_bytes) {$received += [long]$bytes}}
-        $sample=[pscustomobject]@{at=$now.ToString('o');elapsed_seconds=($now-$launched).TotalSeconds;phase=$phase;phase_seconds=($now-$phaseStarted).TotalSeconds;working_set_bytes=$appProcess.WorkingSet64;private_bytes=$appProcess.PrivateMemorySize64;cpu_one_core_percent=100*($cpu-$lastCPU)/[Math]::Max(.001,($now-$lastAt).TotalSeconds);connected=$(if ($latest){$latest.connected}else{0});received_bytes=$received;heap_bytes=$(if($latest){$latest.heap_bytes}else{0});goroutines=$(if($latest){$latest.goroutines}else{0})}
+        $highlighted = if ($latest -and $null -ne $latest.highlighted) { [int]$latest.highlighted } else { 0 }
+        $sample=[pscustomobject]@{at=$now.ToString('o');elapsed_seconds=($now-$launched).TotalSeconds;phase=$phase;phase_seconds=($now-$phaseStarted).TotalSeconds;working_set_bytes=$appProcess.WorkingSet64;private_bytes=$appProcess.PrivateMemorySize64;cpu_one_core_percent=100*($cpu-$lastCPU)/[Math]::Max(.001,($now-$lastAt).TotalSeconds);connected=$(if ($latest){$latest.connected}else{0});highlighted=$highlighted;received_bytes=$received;heap_bytes=$(if($latest){$latest.heap_bytes}else{0});goroutines=$(if($latest){$latest.goroutines}else{0})}
         $samples.Add($sample)
         $samples | Select-Object -Last 1 | Export-Csv -NoTypeInformation -Append -Encoding utf8 (Join-Path $directory 'samples.csv')
         $lastCPU=$cpu;$lastAt=$now
-        if ($phase -eq 'connecting' -and $latest -and $latest.connected -eq $Sessions) {
+        if ($phase -eq 'connecting' -and $latest -and $latest.connected -eq $Sessions -and $highlighted -eq $(if ($Highlight) {$Sessions} else {0})) {
             $phase='idle';$phaseStarted=$now
             Write-Host "All $Sessions connected; idle sampling for 15 seconds"
         } elseif ($phase -eq 'idle' -and ($now-$phaseStarted).TotalSeconds -ge 15) {
@@ -81,6 +94,7 @@ try {
             Write-Host "Started $Seconds second load"
             @{directory=$directory;pid=$appProcess.Id;sessions=$Sessions;status='load';started=$now.ToString('o')} | ConvertTo-Json | Set-Content -Encoding utf8 'artifacts/product-performance/active.json'
         } elseif ($phase -eq 'load' -and ($now-$phaseStarted).TotalSeconds -ge $Seconds) {break}
+        if ($phase -ne 'connecting' -and ($latest.connected -ne $Sessions -or $highlighted -ne $(if ($Highlight) {$Sessions} else {0}))) { throw 'Session or highlighting state changed during measurement' }
         if ($phase -eq 'connecting' -and $timer.Elapsed.TotalSeconds -gt 600) {throw 'Timed out awaiting release UI connections'}
         Start-Sleep -Milliseconds 1000
     }

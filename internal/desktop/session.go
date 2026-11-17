@@ -144,6 +144,7 @@ func (a *app) connect(tab *sessionTab) {
 	attempt := tab.attempt
 	fontSize := float32(a.preferences.FontSize)
 	fontFamily := a.preferences.FontFamily
+	scrollback := a.preferences.EffectiveScrollbackMiB() << 20
 	if _, saved := a.layout.Locate(tab.key); saved != nil {
 		fontSize = saved.FontSize
 	}
@@ -187,7 +188,7 @@ func (a *app) connect(tab *sessionTab) {
 		highlight := connection.NewHighlightStream(observed)
 		term, err := terminal.New(terminal.Options{
 			Theme: githubTerminalLight, DarkTheme: githubTerminalDark,
-			Conn: highlight, Font: terminal.Font{Family: fontFamily, Size: fontSize}, Scrollback: 2 << 20, ImageLimit: -1,
+			Conn: highlight, Font: terminal.Font{Family: fontFamily, Size: fontSize}, Scrollback: scrollback, ImageLimit: -1,
 			OnZoom: func(z terminal.Zoom) bool { a.zoom(tab, z.Steps, z.Reset); return true },
 			OnKey: func(mods ui.Modifiers, key ui.Key) bool {
 				if key == ui.KeyH && mods == ui.Ctrl|ui.Shift && tab.highlight != nil {

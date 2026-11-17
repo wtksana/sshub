@@ -3,6 +3,7 @@ package desktop
 import (
 	"testing"
 
+	"github.com/egoist/mygo/ui"
 	"sshub/internal/library"
 )
 
@@ -45,6 +46,28 @@ func TestDefaultFontAndPerTabZoom(t *testing.T) {
 	defer b.close()
 	if b.preferences != prefs || len(b.tabs) != 2 {
 		t.Fatal("settings or tabs not restored")
+	}
+}
+
+func TestScrollbackSettingsDraftCanBeCancelled(t *testing.T) {
+	a := newApp(t.TempDir())
+	defer a.close()
+	a.settings = &settingsEditor{preferences: a.preferences, size: "13", uiSize: "13"}
+	view := ui.NewTester(a.settingsView, 800, 800)
+	if !view.HasText("历史缓冲") || !view.HasText("仅新建或重新连接的终端生效；现有终端不变。按容量保留最近输出，非固定行数；实际内存占用可能更多。") {
+		t.Fatal("scrollback setting or application scope missing", view.Texts())
+	}
+	if err := view.Click("64 MiB"); err != nil {
+		t.Fatal(err)
+	}
+	if a.settings.preferences.ScrollbackMiB != 64 || a.preferences.EffectiveScrollbackMiB() != 2 {
+		t.Fatal("editing changed active scrollback setting")
+	}
+	if err := view.Click("取消"); err != nil {
+		t.Fatal(err)
+	}
+	if a.settings != nil || a.preferences.EffectiveScrollbackMiB() != 2 || a.store.Preferences().EffectiveScrollbackMiB() != 2 {
+		t.Fatal("cancel applied scrollback preference")
 	}
 }
 

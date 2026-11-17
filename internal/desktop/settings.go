@@ -73,6 +73,7 @@ func (a *app) settingsView(c *ui.Context) {
 	if e == nil {
 		return
 	}
+	e.preferences.ScrollbackMiB = e.preferences.EffectiveScrollbackMiB()
 	open := true
 	ui.DialogBase(c.Key("settings-dialog"), &open, func(backdrop, panel ui.Element) {
 		t := c.Theme()
@@ -111,6 +112,14 @@ func (a *app) settingsView(c *ui.Context) {
 			})
 			ui.Text(c, "使用本机已安装字体；缺失字符由系统回退显示。").FontSize(typeSize(c, -2)).TextColor(t.TextMuted).Wrap()
 			ui.Checkbox(c.Key("settings-reset-tabs"), &e.resetTabs, "同时将现有标签字号设为默认")
+			formField(c, "历史缓冲", func() {
+				ui.Row(c).Gap(12).Children(func() {
+					for _, capacity := range []int{2, 8, 32, 64} {
+						ui.Radio(c.Key("settings-scrollback-"+strconv.Itoa(capacity)), &e.preferences.ScrollbackMiB, capacity, strconv.Itoa(capacity)+" MiB")
+					}
+				})
+			})
+			ui.Text(c, "仅新建或重新连接的终端生效；现有终端不变。按容量保留最近输出，非固定行数；实际内存占用可能更多。").FontSize(typeSize(c, -2)).TextColor(t.TextMuted).Wrap()
 			ui.Divider(c)
 			ui.Text(c, "会话").Bold()
 			ui.Checkbox(c.Key("settings-skip-close-confirmation"), &e.preferences.SkipCloseConfirmation, "关闭终端会话时不再提示")
