@@ -266,7 +266,7 @@ func (h *HighlightStream) controlByte(b byte) {
 		h.state, h.control, h.skipLine = 0, nil, true
 		return
 	}
-	if b == 0x1b && (h.state == 'c' || h.state == 'i') {
+	if b == 0x1b && (h.state == 'e' || h.state == 'c' || h.state == 'i') {
 		h.state, h.control, h.skipLine = 'e', nil, true
 		return
 	}
@@ -339,6 +339,13 @@ func (h *HighlightStream) controlByte(b byte) {
 
 func (h *HighlightStream) csi(final byte, params string) {
 	if final == 'm' {
+		// Private prefixes and intermediates identify other CSI commands, not SGR.
+		for _, b := range []byte(params) {
+			if (b < '0' || b > '9') && b != ';' && b != ':' {
+				h.skipLine = true
+				return
+			}
+		}
 		h.sgr(params)
 		return
 	}
