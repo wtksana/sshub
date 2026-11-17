@@ -73,6 +73,7 @@ func (a *app) paneMenu(m *ui.Menu, pane *layout.Node, tab *sessionTab) {
 			activate()
 			a.toggleSearch()
 		}
+		a.logHighlightMenu(m, tab)
 		m.Submenu("字号", func(m *ui.Menu) {
 			if _, saved := a.layout.Locate(tab.key); saved != nil {
 				m.Item(fmt.Sprintf("当前字号：%g", saved.FontSize)).Disabled(true)
@@ -110,6 +111,13 @@ func (a *app) paneMenu(m *ui.Menu, pane *layout.Node, tab *sessionTab) {
 		if m.Item("关闭会话").ID("close-session").Chosen() {
 			a.requestClose(tab)
 		}
+	}
+}
+
+func (a *app) logHighlightMenu(m *ui.Menu, tab *sessionTab) {
+	enabled := tab.highlight != nil && tab.highlight.Enabled()
+	if m.Item("日志高亮").ID("log-highlighting").Checked(enabled).Disabled(tab.highlight == nil).Chosen() {
+		tab.highlight.SetEnabled(!enabled)
 	}
 }
 

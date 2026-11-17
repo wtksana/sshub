@@ -14,6 +14,11 @@ func (a *app) view(c *ui.Context) {
 	a.focusedTerminal = 0
 	t := githubTheme(c.Theme().Dark, a.preferences)
 	c.SetTheme(&t)
+	for _, tab := range a.tabs {
+		if tab.highlight != nil {
+			tab.highlight.SetDark(t.Dark)
+		}
+	}
 	c.DisableAnimations()
 	c.SetMenuPresentation(ui.PopoverMenus)
 	ui.Column(c).Fill().Children(func() {

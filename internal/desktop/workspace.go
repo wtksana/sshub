@@ -98,7 +98,14 @@ func (a *app) pane(c *ui.Context, pane *layout.Node) {
 			ui.Text(c, tab.err).Padding(6).FontSize(typeSize(c, -2)).TextColor(t.Danger).Wrap()
 		}
 		if tab.term != nil {
+			if tab.highlight != nil {
+				if tab.highlight.Degraded() && !tab.highlightNotified {
+					tab.highlightNotified = true
+					a.notice = "部分超长或复杂日志已跳过高亮，原始输出不受影响"
+				}
+			}
 			e := terminal.View(c.Key(fmt.Sprintf("terminal-%d", tab.key)), tab.term).Grow(1).FillWidth().MinHeight(0)
+			a.terminalContextMenu(c, e, tab)
 			if e.Focused() {
 				a.focusedTerminal = tab.key
 			}

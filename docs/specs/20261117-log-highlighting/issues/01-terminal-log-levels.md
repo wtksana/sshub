@@ -1,4 +1,4 @@
-Status: open
+Status: claimed
 Type: task
 Triage: ready-for-agent
 Blocked by: None

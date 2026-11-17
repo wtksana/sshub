@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/egoist/mygo/plugins/terminal"
+	"github.com/egoist/mygo/ui"
 	"golang.org/x/crypto/ssh"
 	"sshub/internal/connection"
 	"sshub/internal/library"
@@ -30,6 +31,8 @@ type sessionTab struct {
 	retryRequests           []transfer.Request
 	term                    *terminal.Terminal
 	observed                *observedShell
+	highlight               *connection.HighlightStream
+	highlightNotified       bool
 	searchOpen, searchFocus bool
 	search, searchApplied   string
 }
@@ -77,6 +80,11 @@ func (a *app) release(tab *sessionTab) {
 		shell := tab.shell
 		tab.shell = nil
 		go shell.Close()
+	}
+	if tab.highlight != nil {
+		highlight := tab.highlight
+		tab.highlight = nil
+		go highlight.Close()
 	}
 	if tab.transport != nil {
 		tab.transport.release()
@@ -176,10 +184,22 @@ func (a *app) connect(tab *sessionTab) {
 			return
 		}
 		observed := a.observeShell(shell)
+		highlight := connection.NewHighlightStream(observed)
 		term, err := terminal.New(terminal.Options{
 			Theme: githubTerminalLight, DarkTheme: githubTerminalDark,
-			Conn: observed, Font: terminal.Font{Family: fontFamily, Size: fontSize}, Scrollback: 2 << 20, ImageLimit: -1,
-			OnZoom:   func(z terminal.Zoom) bool { a.zoom(tab, z.Steps, z.Reset); return true },
+			Conn: highlight, Font: terminal.Font{Family: fontFamily, Size: fontSize}, Scrollback: 2 << 20, ImageLimit: -1,
+			OnZoom: func(z terminal.Zoom) bool { a.zoom(tab, z.Steps, z.Reset); return true },
+			OnKey: func(mods ui.Modifiers, key ui.Key) bool {
+				if key == ui.KeyH && mods == ui.Ctrl|ui.Shift && tab.highlight != nil {
+					tab.highlight.SetEnabled(!tab.highlight.Enabled())
+					return true
+				}
+				if key == ui.KeyContextMenu && mods == 0 || key == ui.KeyF10 && mods == ui.Shift {
+					a.showTerminalMenu(tab)
+					return true
+				}
+				return false
+			},
 			OnSearch: func(terminal.SearchStatus) { a.dispatch(func() {}) },
 			// Status is shown in the toolbar; an injected exit line can overwrite a partial remote line.
 			NoExitMessage: true,
@@ -193,6 +213,7 @@ func (a *app) connect(tab *sessionTab) {
 			},
 		})
 		if err != nil {
+			highlight.Close()
 			stop()
 			client.Close()
 			a.connectionFailed(tab, attempt, err)
@@ -224,6 +245,7 @@ func (a *app) connect(tab *sessionTab) {
 			tab.transport, tab.shell = newTransport(client), shell
 			tab.term, tab.client, tab.status = term, client, "已连接"
 			tab.observed, _ = observed.(*observedShell)
+			tab.highlight, tab.highlightNotified = highlight, false
 			a.zoom(tab, 0, false)
 			select {
 			case <-term.Done():
