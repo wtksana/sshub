@@ -31,3 +31,5 @@ Blocked by: 01
 - `go test -tags mygo_nowebview ./internal/library ./internal/connection ./internal/desktop`、相应 `go vet`、MyGo vet 与调试构建通过。测试覆盖全部关闭后的重启、迁移预览和存储副本所有权、无效保存／导入、外部修改保护、任意网络分块的日期样本、规则优先级、开关保持及草稿取消。补充了 ESC 重启 CSI、CAN／SUB 取消控制序列后显式前景色跨行保留的回归。
 - 原生专项 `scripts/verify-highlight-settings-ui.ps1 -SkipBuild` 使用独立配置、本地 SSH fixture、临时密钥和精确固定的主机指纹，通过保存／取消／失败、键盘打开颜色选择器及实际选色、两会话隔离、隐藏标签主题更新、旧历史保色、连续 ANSI 输出、搜索、原文复制、迁移、重启与 900×620／字号 20。证据：`artifacts/highlight-settings-ui/20261117-220304/`，关键设置、历史和导入截图已查看。输入无效 HEX 草稿曾触发预览解析失败，现已修复安全预览并补回归。
 - 此专项是 DebugBuild 功能检查，未进行正式十分钟资源／吞吐测量；全功能综合验收由 root 补齐。
+
+2026-11-18 集成补充：全功能正式 2 MiB 八会话十分钟高亮开／关对比已完成，见[正式负载报告](../../../performance/20261118-log-highlighting.md)；七项预设及三条自定义规则参与负载。用户取消较大缓冲档位资源采样，其他未测项见[交付验证](../../../verification/20261117-log-highlighting.md)。

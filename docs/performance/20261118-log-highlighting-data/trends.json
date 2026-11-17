@@ -1,0 +1,51 @@
+[
+  {
+    "mode": "off",
+    "rows": 593,
+    "start": "2026-11-18T00:05:10.8602132+08:00",
+    "end": "2026-11-18T00:15:10.4418424+08:00",
+    "mean_private_mib": 188.33604289629005,
+    "early_ws_mib": 182.01436705508473,
+    "late_ws_mib": 183.44928385416668,
+    "early_private_mib": 187.78436175847457,
+    "late_private_mib": 189.3005859375,
+    "max_heap_mib": 42.233154296875,
+    "goroutines": [
+      "93",
+      "94"
+    ],
+    "connected": [
+      "8"
+    ],
+    "highlighted": [
+      "0"
+    ],
+    "degraded": [
+      "0"
+    ]
+  },
+  {
+    "mode": "on",
+    "rows": 592,
+    "start": "2026-11-18T00:33:13.7009673+08:00",
+    "end": "2026-11-18T00:43:12.9349556+08:00",
+    "mean_private_mib": 179.6992385451858,
+    "early_ws_mib": 173.8040254237288,
+    "late_ws_mib": 175.02141927083332,
+    "early_private_mib": 179.56859110169492,
+    "late_private_mib": 180.34654947916667,
+    "max_heap_mib": 43.21295928955078,
+    "goroutines": [
+      "93"
+    ],
+    "connected": [
+      "8"
+    ],
+    "highlighted": [
+      "8"
+    ],
+    "degraded": [
+      "0"
+    ]
+  }
+]

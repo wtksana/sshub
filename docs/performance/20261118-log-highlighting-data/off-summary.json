@@ -1,0 +1,12 @@
+{
+  "duration_seconds": 600.5980416,
+  "mean_working_set_mib": 182.43124868254637,
+  "received_delta_bytes": 484870700,
+  "mean_cpu_one_core_percent": 32.22852295485537,
+  "received_per_session_line_rate": 1000.8437063034687,
+  "max_working_set_mib": 183.453125,
+  "sessions": 8,
+  "directory": "D:\\Dev\\sshub\\artifacts\\product-performance\\20261117-235909",
+  "startup_show_ms": 309.7581,
+  "max_private_mib": 189.30859375
+}

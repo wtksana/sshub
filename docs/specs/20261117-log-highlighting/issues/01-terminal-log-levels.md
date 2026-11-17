@@ -38,3 +38,5 @@ Blocked by: None
 补充验收（2026-11-17）：`scripts/verify-log-highlighting-ui.ps1 -SkipBuild` 已通过。使用新的独立数据目录与本地 SSH fixture，验证两会话独立、新建默认关闭、切换标签保持、重连默认关闭、正常退出与重启恢复后重新连接默认关闭。连续输出 3 秒后，在分屏窄终端中实际观察中文与 JSON 普通文本软折行、服务器显式绿色序号、INFO／WARN／ERROR 级别颜色；INFO 与“性能”搜索均找到匹配。截图位于 `artifacts/log-highlighting-ui/20261117-214411/`，其中 `continuous-logs-wrapped.png` 与 `search-性能.png` 已逐张查看。脚本运行后应用和 fixture 均退出。
 
 01 基础流式及原生窗口闭环已完成，可继续 02／03。备用屏幕控制保护已有流式回归；最后全功能综合原生窗口与正式八会话十分钟负载仍由 root 执行，不由这次 3 秒 DebugBuild 接收与截图代替。
+
+2026-11-18 集成补充：全功能原生专项与正式 2 MiB 八会话十分钟高亮开／关负载已完成，见[交付验证](../../../verification/20261117-log-highlighting.md)和[正式负载报告](../../../performance/20261118-log-highlighting.md)。较大缓冲档位的资源采样按用户要求取消，不影响本项功能验证。

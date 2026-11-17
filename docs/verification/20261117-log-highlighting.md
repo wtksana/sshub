@@ -1,6 +1,6 @@
 # 日志高亮交付验证
 
-2026-11-17，Windows x64。四项功能任务已完成；正式综合负载验收尚未完成，不能据此宣称整份规格已经全部验收。
+2026-11-18，Windows x64。四项功能任务、回归、原生专项、双轴审查及默认 2 MiB 的正式十分钟高亮开／关负载均已完成。用户随后取消 8／32／64 MiB 资源采样，按调整后的范围完成本功能交付；不代表 SSHub 首版所有平台／环境验收完成。
 
 ## 已通过
 
@@ -21,16 +21,22 @@
 
 这些生成物不纳入 Git。微基准的原始输出与方法另见[匹配及提示符微基准](../performance/20261117-highlight-matcher.md)：开启时提示符交付 p50 20.402 ms、p95 20.775 ms、最大 25.931 ms；这是流转换的调度及拼片等待，不是 UI 呈现延迟或严格 20 ms 保证。
 
-## 正式构建与尚待验证
+## 正式构建与负载
 
-最终代码 `120ade66953b20cae3a578a57bb04e8c2a1d5ece` 通过 `scripts/build.ps1 -OutputDirectory build/log-highlighting-release` 正式构建。Go 1.27.4、MyGo v0.9.1，原生标签 `mygo_nowebview,mygo_nodownload,mygo_noinspector`，CGO=0，无 e2e automation。构建信息的 `vcs.modified=true` 如实保留，不将它描述为完全干净的可重现构建。之后仅修改验证文档，不改变该 EXE 的代码。
+最终代码 `120ade66953b20cae3a578a57bb04e8c2a1d5ece` 通过 `scripts/build.ps1 -OutputDirectory build/log-highlighting-release` 正式构建。Go 1.27.4、MyGo v0.9.1，原生标签 `mygo_nowebview,mygo_nodownload,mygo_noinspector`，CGO=0，无 e2e automation。构建信息的 `vcs.modified=true` 如实保留，不将它描述为完全干净的可重现构建。之后的验证文档及采样准备超时调整不改变该 EXE 的代码。
 
 - EXE SHA-256：`BF52CA24556CBA4C96DFF4136F0168A4854FD3035F85CA04A58CB5584D2023F5`。
 - Ghostty DLL SHA-256：`53E8E2DD979702E8F2C48107AF19BE5A76EFC2E88EB7CF1097218E899665DA41`。
 - 本机：Windows 11 10.0.26300、Intel Core Ultra X7 358H、16 逻辑处理器、约 31.55 GiB RAM。
 
-已尝试启动 `measure-product.ps1` 的八会话正式版采样。窗口可枚举，但截图为黑屏，首次点击报 `GetCursorPos failed: 拒绝访问。 (0x80070005)`，同时存在 LogonUI；为避免绕过锁屏已停止操作并请求解锁。采样停在 `awaiting_connections`，随后终止脚本并清理测试进程，未开始负载，**没有有效性能结果**。启动准备文件留在 `artifacts/product-performance/20261117-223736/`，不能当作通过证据。
+解锁后已完成两轮正式采样：八会话各约 1,000 条逻辑行／秒，关闭／开启各十分钟。七项预设加三条自定义规则（“性能”、`message`、`"id":[0-9]+`），每条 101 字节，四个可见窗格，2 MiB 历史预算。全程八连接，开启轮八会话启用，降级均为零。
 
-待可交互桌面恢复后，用相同正式 EXE、七项预设加三条自定义规则（“性能”、`message`、`"id":[0-9]+`），执行八会话各 1,000 条逻辑行／秒、关闭／开启各十分钟，以及 2／8／32／64 MiB 档位资源对比。日志每条 101 字节，含 INFO／WARN／ERROR、时间、中文、普通 JSON 文本及原有绿色序号。记录连接／启用／降级数、接收字节、工作集、私有提交、CPU、堆和 goroutine；接收速率不能当作渲染吞吐。
+关闭／开启平均 CPU 分别占单核 32.23%／49.13%，平均工作集 182.43／174.21 MiB，每会话原始接收 1,000.84／999.84 行／秒。单次顺序对比不能证明高亮节省内存；十分钟内末段较前段内存增长较小，也不替代长期泄漏检查。完整环境、负载、分段趋势、逐秒数据及失败尝试见[正式负载报告](../performance/20261118-log-highlighting.md)。原始接收速率不能当作渲染吞吐，未测端到端延迟或最高渲染能力。
+
+用户明确要求“不用测 8、32、64 MiB”，已停止 8 MiB 的连接准备，未开始该轮负载；不提供这些档位的资源结论。四档配置、迁移、新建／重连及历史淘汰等已有功能验证保留。正式测试程序与 fixture 均已退出。
+
+收尾检查通过：负载 CSV 的状态及持续时间、summary 均值／速率与原始数据一致、两轮 EXE 哈希一致；采样脚本 PowerShell 语法、变更 Markdown 本地链接、UTF-8 无 BOM 和真实 diff 检查通过。没有重复运行已通过且产品代码未改变的 Go 全量回归。
+
+## 未执行项
 
 `go test -race` 未执行成功：当前 CGO=0 且无 C 编译器；没有为此安装或改变本机工具链。未重启电脑、未做全新 Windows 验收或小时级泄漏测试，历史性能报告不能代替上述待测项。

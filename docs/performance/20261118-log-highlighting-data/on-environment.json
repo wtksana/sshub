@@ -1,0 +1,100 @@
+{
+  "cpu": {
+    "Name": "Intel(R) Core(TM) Ultra X7 358H",
+    "NumberOfLogicalProcessors": 16
+  },
+  "window_dip": "1280x800",
+  "lines_per_second_per_session": 1000,
+  "seconds": 600,
+  "os": {
+    "Caption": "Microsoft Windows 11 家庭版 中文版",
+    "Version": "10.0.26300",
+    "TotalVisibleMemorySize": 33079836
+  },
+  "preferences": {
+    "log_highlight": {
+      "custom": [
+        {
+          "kind": "keyword",
+          "case_sensitive": false,
+          "pattern": "性能",
+          "enabled": true,
+          "color": "#8250DF"
+        },
+        {
+          "kind": "keyword",
+          "case_sensitive": false,
+          "pattern": "message",
+          "enabled": true,
+          "color": "#9A6700"
+        },
+        {
+          "kind": "regex",
+          "case_sensitive": true,
+          "pattern": "\"id\":[0-9]+",
+          "enabled": true,
+          "color": "#CF222E"
+        }
+      ],
+      "builtins": [
+        {
+          "dark_color": "#8B949E",
+          "enabled": true,
+          "id": "trace",
+          "light_color": "#57606A"
+        },
+        {
+          "dark_color": "#BC8CFF",
+          "enabled": true,
+          "id": "debug",
+          "light_color": "#8250DF"
+        },
+        {
+          "dark_color": "#3FB950",
+          "enabled": true,
+          "id": "info",
+          "light_color": "#1A7F37"
+        },
+        {
+          "dark_color": "#D29922",
+          "enabled": true,
+          "id": "warn",
+          "light_color": "#9A6700"
+        },
+        {
+          "dark_color": "#F85149",
+          "enabled": true,
+          "id": "error",
+          "light_color": "#CF222E"
+        },
+        {
+          "dark_color": "#F85149",
+          "enabled": true,
+          "id": "fatal",
+          "light_color": "#CF222E"
+        },
+        {
+          "dark_color": "#58A6FF",
+          "enabled": true,
+          "id": "date",
+          "light_color": "#0969DA"
+        }
+      ]
+    },
+    "theme": "light",
+    "font_size": 13,
+    "font_family": "Cascadia Mono",
+    "scrollback_mib": 2
+  },
+  "commit": "64f171763f862e9f3a782150365cfde52efd0210",
+  "go": "go version go1.27.4 windows/amd64",
+  "exe_sha256": "BF52CA24556CBA4C96DFF4136F0168A4854FD3035F85CA04A58CB5584D2023F5",
+  "font": "Cascadia Mono 13",
+  "line_bytes": 101,
+  "sessions": 8,
+  "dll_sha256": "53E8E2DD979702E8F2C48107AF19BE5A76EFC2E88EB7CF1097218E899665DA41",
+  "visible_panes": 4,
+  "highlight": true,
+  "at": "2026-11-18T00:26:40.5402109+08:00",
+  "scrollback_bytes": 2097152
+}

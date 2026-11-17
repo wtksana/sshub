@@ -28,3 +28,5 @@ Blocked by: None
 - `go test -tags mygo_nowebview ./internal/library ./internal/desktop`、对应 `go vet`、`GOFLAGS=-tags=mygo_nowebview go tool mygo vet ./internal/desktop` 及调试构建通过。
 - `scripts/verify-scrollback-ui.ps1 -SkipBuild -BuildDirectory build/scrollback` 原生专项通过，使用独立数据目录、本地临时 SSH fixture 和握手闸门。验证取消、四档保存、外部修改失败、导入导出、重启恢复、900×620／界面字号 20；6 秒持续输出后旧 2 MiB 和连接中 2 MiB 的初始标记被淘汰，新建 8 MiB 保留，重连改用 8 MiB 后同样保留。
 - 证据目录：`artifacts/scrollback-ui/20261117-211622/`，包括 `result.json`、设置截图、历史保留和重连截图。这是历史淘汰行为检查，不是固定行数、内存或最高渲染吞吐测量；综合正式负载与资源验收随全功能集成补齐。
+
+2026-11-18 集成补充：默认 2 MiB 的八会话十分钟高亮开／关正式采样完成，见[负载报告](../../../performance/20261118-log-highlighting.md)。用户明确取消 8／32／64 MiB 资源测试；已停止尚未进入负载的 8 MiB 准备过程。四档功能保留，未实测档位不提供资源占用或固定保留行数结论。

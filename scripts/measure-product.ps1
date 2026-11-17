@@ -95,7 +95,7 @@ try {
             @{directory=$directory;pid=$appProcess.Id;sessions=$Sessions;status='load';started=$now.ToString('o')} | ConvertTo-Json | Set-Content -Encoding utf8 'artifacts/product-performance/active.json'
         } elseif ($phase -eq 'load' -and ($now-$phaseStarted).TotalSeconds -ge $Seconds) {break}
         if ($phase -ne 'connecting' -and ($latest.connected -ne $Sessions -or $highlighted -ne $(if ($Highlight) {$Sessions} else {0}))) { throw 'Session or highlighting state changed during measurement' }
-        if ($phase -eq 'connecting' -and $timer.Elapsed.TotalSeconds -gt 600) {throw 'Timed out awaiting release UI connections'}
+        if ($phase -eq 'connecting' -and $timer.Elapsed.TotalSeconds -gt 1800) {throw 'Timed out awaiting release UI connections'}
         Start-Sleep -Milliseconds 1000
     }
     $serverProcess.StandardInput.WriteLine('load off');$serverProcess.StandardInput.Flush()

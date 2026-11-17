@@ -36,6 +36,6 @@ Blocked by: 02
 
 验证通过：四个受影响包test／vet及MyGo vet；新增编译展开、大小写、局部重叠、零宽、所有字节分割、工作／候选／扩张预算、保存失败、草稿取消、clone及迁移回归。`scripts/verify-custom-highlight-ui.ps1 -SkipBuild -BuildDirectory build/custom-highlight`使用独立临时SSH／数据及精确fixture host key通过；最终证据`artifacts/custom-highlight-ui/20261117-222244/result.json`，代表窗口截图已复核。覆盖两会话隔离、增删编辑／键盘上移、重排后pattern／type／color完整跟随及二次编辑、历史保色、原绿色序号、中文搜索／原文复制、迁移／重启、保存冲突、900×620及UI20窄窗；应用和fixture均已退出。
 
-默认优化的真实7preset＋3custom transform微基准与200次无换行提示符off/on原始输出见[匹配微基准](../../../performance/20261117-highlight-matcher.md)。代表16KiB约1.65ms、无匹配1.59ms；on提示符p50 20.402ms、p95 20.775ms、max25.931ms。包含调度及拼片期限，不是渲染吞吐／帧率或严格20ms保证。综合正式十分钟off/on及缓冲档位资源对比由集成任务补齐，不以本微基准代替。
+默认优化的真实7preset＋3custom transform微基准与200次无换行提示符off/on原始输出见[匹配微基准](../../../performance/20261117-highlight-matcher.md)。代表16KiB约1.65ms、无匹配1.59ms；on提示符p50 20.402ms、p95 20.775ms、max25.931ms。包含调度及拼片期限，不是渲染吞吐／帧率或严格20ms保证。
 
-集成审查和正式构建已通过，唯一 Spec P2 已修复并复核；正式负载尝试停在连接前，桌面输入被拒绝且存在 LogonUI，已请求解锁并清理测试进程，未得到有效资源／吞吐结果。整体交付仍保留该未测项，详见[交付验证](../../../verification/20261117-log-highlighting.md)。
+2026-11-18 集成收尾：正式构建、双轴审查及唯一 Spec P2 修复复核通过。解锁后完成默认 2 MiB、七项内置＋三条自定义、八会话各约 1,000 行／秒的十分钟关闭／开启对比；CPU 均值分别占单核32.23%／49.13%，八连接稳定且无降级。详见[正式负载报告与原始数据](../../../performance/20261118-log-highlighting.md)。用户取消8／32／64 MiB资源采样，已停止准备过程并清理测试进程，按最新范围交付；其他未测项见[交付验证](../../../verification/20261117-log-highlighting.md)。
