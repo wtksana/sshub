@@ -1,6 +1,7 @@
 package desktop
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/egoist/mygo/ui"
@@ -44,7 +45,7 @@ func TestDefaultFontAndPerTabZoom(t *testing.T) {
 	a.close()
 	b := newApp(dir)
 	defer b.close()
-	if b.preferences != prefs || len(b.tabs) != 2 {
+	if !reflect.DeepEqual(b.preferences, prefs) || len(b.tabs) != 2 {
 		t.Fatal("settings or tabs not restored")
 	}
 }

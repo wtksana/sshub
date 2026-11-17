@@ -22,6 +22,7 @@ type HighlightStream struct {
 	source                             io.ReadWriteCloser
 	enabled, dark                      atomic.Bool
 	degraded                           atomic.Bool
+	rules                              atomic.Pointer[HighlightRules]
 	reads                              chan highlightRead
 	slots                              chan struct{}
 	received                           chan struct{}
@@ -155,6 +156,12 @@ func (h *HighlightStream) flush(boundary bool) {
 	}
 	if !h.Enabled() || h.foreground || h.skipLine || h.alt[0] || h.alt[1] || h.alt[2] {
 		h.out = append(h.out, p...)
+	} else if rules := h.rules.Load(); rules != nil {
+		var ok bool
+		h.out, ok = rules.append(h.out, p, h.previousWord, boundary, h.dark.Load())
+		if !ok {
+			h.degraded.Store(true)
+		}
 	} else {
 		// ASCII matches never split a UTF-8 encoding, including truncated input.
 		for i := 0; i < len(p); {
@@ -250,6 +257,14 @@ func (h *HighlightStream) transform(p []byte) {
 }
 
 func (h *HighlightStream) controlByte(b byte) {
+	if b == 0x18 || b == 0x1a {
+		h.state, h.control, h.skipLine = 0, nil, true
+		return
+	}
+	if b == 0x1b && (h.state == 'c' || h.state == 'i') {
+		h.state, h.control, h.skipLine = 'e', nil, true
+		return
+	}
 	switch h.state {
 	case 'e':
 		switch b {

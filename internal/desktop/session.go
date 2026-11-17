@@ -247,6 +247,7 @@ func (a *app) connect(tab *sessionTab) {
 			tab.term, tab.client, tab.status = term, client, "已连接"
 			tab.observed, _ = observed.(*observedShell)
 			tab.highlight, tab.highlightNotified = highlight, false
+			highlight.SetRules(compileHighlightPreferences(a.preferences))
 			a.zoom(tab, 0, false)
 			select {
 			case <-term.Done():

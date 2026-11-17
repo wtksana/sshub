@@ -123,7 +123,7 @@ func (a *app) logHighlightMenu(m *ui.Menu, tab *sessionTab) {
 
 func (a *app) appMenu(m *ui.Menu) {
 	if m.Item("设置…").ID("settings").Disabled(a.store == nil).Chosen() {
-		a.settings = &settingsEditor{preferences: a.preferences, size: fmt.Sprint(a.preferences.FontSize), uiSize: fmt.Sprint(a.preferences.EffectiveUIFontSize())}
+		a.beginSettings()
 	}
 	if m.Item("导入配置…").ID("import-config").Disabled(a.store == nil).Chosen() {
 		a.migration = &migrationEditor{}
