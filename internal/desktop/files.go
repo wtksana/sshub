@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
@@ -211,6 +214,9 @@ func (a *app) files(c *ui.Context) {
 
 func (a *app) directoryMenu(m *ui.Menu, tab *sessionTab) {
 	enabled := tab.client != nil && tab.files.path != ""
+	if m.Item("cd 到此目录").ID("files-cd").Disabled(!enabled || tab.term == nil).Chosen() {
+		a.cdToDirectory(tab, tab.files.path)
+	}
 	if m.Item("刷新").ID("files-refresh").Disabled(tab.client == nil).Chosen() {
 		a.browse(tab, tab.files.path)
 	}
@@ -230,6 +236,13 @@ func (a *app) directoryMenu(m *ui.Menu, tab *sessionTab) {
 }
 
 func (a *app) entryMenu(m *ui.Menu, tab *sessionTab, target string, info os.FileInfo) {
+	if m.Item("cd 到此目录").ID("file-cd").Disabled(tab.term == nil).Chosen() {
+		dir := path.Dir(target)
+		if info.IsDir() {
+			dir = target
+		}
+		a.cdToDirectory(tab, dir)
+	}
 	if m.Item("下载到…").ID("file-download").Disabled(info.Mode()&os.ModeSymlink != 0).Chosen() {
 		a.chooseDownload(tab, target)
 	}
@@ -243,6 +256,27 @@ func (a *app) entryMenu(m *ui.Menu, tab *sessionTab, target string, info os.File
 	if m.Item("删除…").ID("file-delete").Danger().Chosen() {
 		a.editFile(tab, "delete", target, info)
 	}
+}
+
+func directoryCommand(dir string) (string, bool) {
+	if !path.IsAbs(dir) || !utf8.ValidString(dir) || strings.ContainsFunc(dir, unicode.IsControl) {
+		return "", false
+	}
+	return "cd '" + strings.ReplaceAll(dir, "'", `'\''`) + "'", true
+}
+
+func (a *app) cdToDirectory(tab *sessionTab, dir string) {
+	if a.activeTab() != tab || tab.term == nil || tab.status != "已连接" {
+		return
+	}
+	command, ok := directoryCommand(dir)
+	if !ok {
+		a.actionError = "无法将此路径安全地发送到终端"
+		return
+	}
+	// Move to the end and clear the pending shell input before submitting cd.
+	tab.term.Send([]byte("\x05\x15" + command + "\r"))
+	a.terminalFocus = tab.key
 }
 
 func (a *app) chooseUpload(tab *sessionTab, directory bool) {

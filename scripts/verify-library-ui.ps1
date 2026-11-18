@@ -194,12 +194,26 @@ try {
     Assert-Text '传输队列'
     Invoke-UI key Ctrl+Shift+E --settle | Out-Null
     Assert-Absent '传输队列'
+    Invoke-UI press key=group-sort-核心 --settle | Out-Null
+    Invoke-UI press 'key={group-sort-added}' --settle | Out-Null
+    Invoke-UI press key=group-sort-测试 --settle | Out-Null
+    Invoke-UI press 'key={group-sort-recent}' --settle | Out-Null
     Stop-TestApp
+    $sorts = (Get-Content -Raw (Join-Path $dataDir 'workspace.json') | ConvertFrom-Json).group_sort
+    if ($sorts.核心 -ne 'added' -or $sorts.测试 -ne 'recent') { throw 'Independent group sorts were not saved' }
 
     Start-TestApp
     Assert-Text '2 / 2 条连接'
     Select-Profile $firstID
     Assert-Text '香港主机（已修改）'
+    $source = "key=profile-$secondID"
+    Invoke-UI pointer down $source --settle | Out-Null
+    Invoke-UI pointer move key=group-sort-核心 --settle | Out-Null
+    Invoke-UI pointer up key=group-sort-核心 --settle | Out-Null
+    if (((Get-Content -Raw $configPath | ConvertFrom-Json).profiles | Where-Object id -eq $secondID).group -ne '核心') { throw 'Dragging did not move the connection to the target group' }
+    $grouped = Read-UI
+    if ($grouped.IndexOf("key=profile-$secondID") -gt $grouped.IndexOf("key=profile-$firstID")) { throw 'Saved added-time sort did not put the newest connection first' }
+    Invoke-UI screenshot (Join-Path $directory 'grouped-connections.png') | Out-Null
     if ((Get-Content -Raw (Join-Path $dataDir 'connections.json') | ConvertFrom-Json).profiles[0].group -ne '核心') { throw 'Edited group not saved' }
     Invoke-UI press key=scope-recent --settle | Out-Null
     Assert-Text '1 / 2 条连接'

@@ -34,6 +34,8 @@ type State struct {
 	HideRight      bool    `json:"hide_right"`
 	WindowWidth    int     `json:"window_width,omitempty"`
 	WindowHeight   int     `json:"window_height,omitempty"`
+
+	GroupSort map[string]string `json:"group_sort,omitempty"`
 }
 
 func New() *State {

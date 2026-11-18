@@ -44,32 +44,15 @@ func (a *app) sidebar(c *ui.Context) {
 			suffix = " · " + filter
 		}
 		ui.Textf(c, "%d / %d 条连接%s", len(results), len(a.profiles), suffix).FontSize(typeSize(c, -2)).TextColor(t.TextMuted).SingleLine().Tooltip(filter)
-		ui.List(c.Key("profile-list"), nil, len(results), func(i int) {
-			p := results[i]
-			row := ui.ButtonBase(c.Key("profile-"+p.ID)).Label("选择连接 "+p.Name).AccessSelected(a.selected == p.ID).FillWidth().Padding(7, 8).Radius(6)
-			if a.selected == p.ID {
-				row.Background(t.Selection)
-			} else if row.Hovered() {
-				row.Background(t.SurfaceHover)
-			}
-			row.Children(func() {
-				ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
-					ui.Row(c).Gap(5).AlignItems(ui.Center).Children(func() {
-						if p.Favorite {
-							ui.Icon(c, iconStar).Size(14, 14).Shrink(0).TextColor(t.TextMuted)
-						}
-						ui.Text(c, p.Name).Bold().SingleLine()
-					})
-					ui.Text(c, p.Username+"@"+net.JoinHostPort(p.Host, strconv.Itoa(p.Port))).FontSize(typeSize(c, -2)).SingleLine()
-				})
-			}).OnClick(func() { a.selected = p.ID })
-			row.Tooltip(p.Name + "\n" + p.Username + "@" + net.JoinHostPort(p.Host, strconv.Itoa(p.Port)) + "\n认证：" + authLabel(p.Auth) + "\n分组：" + p.Group + "\n双击连接 · 右键管理")
-			row.ContextMenu(func(m *ui.Menu) { a.profileMenu(m, p) })
-			if row.DoubleClicked() {
-				a.selected = p.ID
-				if tab := a.openTab(p); tab != nil {
-					a.connect(tab)
-				}
+		rows := a.profileRows(results)
+		ui.List(c.Key("profile-list"), nil, len(rows)).ItemKey(func(i int) any {
+			return rows[i].key()
+		}).Rows(func(row ui.ListRow) {
+			item := rows[row.Index]
+			if item.profile.ID == "" {
+				a.profileGroupHeader(row.Context, item.group)
+			} else {
+				a.profileRow(row.Context, item.profile)
 			}
 		}).Grow(1).FillWidth().Children(func() {
 			if len(results) == 0 {
@@ -81,4 +64,33 @@ func (a *app) sidebar(c *ui.Context) {
 			}
 		})
 	})
+}
+
+func (a *app) profileRow(c *ui.Context, p library.Profile) {
+	t := c.Theme()
+	row := ui.ButtonBase(c.Key("profile-"+p.ID)).Drag(profileDrag{p.ID, p.Group}).Label("选择连接 "+p.Name).AccessSelected(a.selected == p.ID).FillWidth().Padding(7, 8).Radius(6)
+	if a.profileDrop(row, p.Group) || a.selected == p.ID {
+		row.Background(t.Selection)
+	} else if row.Hovered() {
+		row.Background(t.SurfaceHover)
+	}
+	row.Children(func() {
+		ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
+			ui.Row(c).Gap(5).AlignItems(ui.Center).Children(func() {
+				if p.Favorite {
+					ui.Icon(c, iconStar).Size(14, 14).Shrink(0).TextColor(t.TextMuted)
+				}
+				ui.Text(c, p.Name).Bold().SingleLine()
+			})
+			ui.Text(c, p.Username+"@"+net.JoinHostPort(p.Host, strconv.Itoa(p.Port))).FontSize(typeSize(c, -2)).SingleLine()
+		})
+	}).OnClick(func() { a.selected = p.ID })
+	row.Tooltip(p.Name + "\n" + p.Username + "@" + net.JoinHostPort(p.Host, strconv.Itoa(p.Port)) + "\n认证：" + authLabel(p.Auth) + "\n分组：" + p.Group + "\n双击连接 · 拖动改组 · 右键管理")
+	row.ContextMenu(func(m *ui.Menu) { a.profileMenu(m, p) })
+	if row.DoubleClicked() {
+		a.selected = p.ID
+		if tab := a.openTab(p); tab != nil {
+			a.connect(tab)
+		}
+	}
 }

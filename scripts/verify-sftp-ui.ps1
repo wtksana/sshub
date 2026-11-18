@@ -109,6 +109,17 @@ try {
     UI fill "key=$pathKey" '/sorting' --settle | Out-Null
     UI key Enter --settle | Out-Null
     Wait-Text 'Alpha.txt'
+    function Assert-TerminalCommand([string]$command) {
+        UI press key=terminal-search --settle | Out-Null
+        $searchKey = [regex]::Match((Snapshot), 'key=(terminal-query-\d+)').Groups[1].Value
+        if (!$searchKey) { throw 'Terminal search missing' }
+        UI fill "key=$searchKey" $command --settle | Out-Null
+        Wait-Text '1 处匹配'
+        $closeKey = $searchKey.Replace('terminal-query-', 'search-close-')
+        UI press "key=$closeKey" --settle | Out-Null
+    }
+    Entry-Menu 'Alpha.txt' file-cd
+    Assert-TerminalCommand "cd '/sorting'"
     function Assert-FileOrder([string[]]$expected) {
         $actual = [regex]::Matches((Snapshot),'(?m)^\s*@e\d+ \[button\] "([^"]+)".*key=remote-entry-') | ForEach-Object { $_.Groups[1].Value }
         if (($actual -join '|') -ne ($expected -join '|')) { throw "Wrong file order: $actual; expected $expected" }
@@ -144,6 +155,8 @@ try {
     UI fill key=file-edit-value '中文 文件夹' --settle | Out-Null
     UI press key=file-edit-confirm --settle | Out-Null
     Wait-Text '中文 文件夹/'
+    Entry-Menu '中文 文件夹/' file-cd
+    Assert-TerminalCommand "cd '/中文 文件夹'"
     Entry-Menu '中文 文件夹/' file-rename
     UI fill key=file-edit-value '重命名目录' --settle | Out-Null
     UI press key=file-edit-confirm --settle | Out-Null

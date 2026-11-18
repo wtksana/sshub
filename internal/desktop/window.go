@@ -7,6 +7,19 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
+const minWindowWidth, minWindowHeight = 900, 620
+
+func startupWindowBounds(width, height int, work mygo.Rectangle) mygo.Rectangle {
+	if work.Width <= 0 || work.Height <= 0 {
+		return mygo.Rectangle{Width: width, Height: height}
+	}
+	width, height = min(width, work.Width), min(height, work.Height)
+	return mygo.Rectangle{
+		X: work.X + (work.Width-width)/2, Y: work.Y + (work.Height-height)/2,
+		Width: width, Height: height,
+	}
+}
+
 func Run(dir string) error {
 	a := newApp(dir)
 	a.diagnostics = openDiagnostics()
@@ -16,8 +29,10 @@ func Run(dir string) error {
 		if a.layout != nil && a.layout.WindowWidth != 0 && a.layout.WindowHeight != 0 {
 			width, height = a.layout.WindowWidth, a.layout.WindowHeight
 		}
+		bounds := startupWindowBounds(width, height, mygo.Screen.PrimaryDisplay().WorkArea)
 		w := mygo.NewWindow(mygo.WindowOptions{
-			Title: "SSHub", Width: width, Height: height, MinWidth: 900, MinHeight: 620,
+			Title: "SSHub", X: bounds.X, Y: bounds.Y, Width: bounds.Width, Height: bounds.Height,
+			MinWidth: min(minWindowWidth, bounds.Width), MinHeight: min(minWindowHeight, bounds.Height),
 			TitleBarStyle: mygo.TitleBarHidden, TitleBarHeight: 34, HideWindowButtons: true,
 			Hidden: true, Content: ui.View(a.view),
 		})
@@ -25,8 +40,8 @@ func Run(dir string) error {
 		rememberSize := func() {
 			if a.layout != nil && !w.IsMaximized() && !w.IsMinimized() {
 				width, height := w.Size()
-				a.layout.WindowWidth = max(900, min(16384, width))
-				a.layout.WindowHeight = max(620, min(16384, height))
+				a.layout.WindowWidth = max(minWindowWidth, min(16384, width))
+				a.layout.WindowHeight = max(minWindowHeight, min(16384, height))
 			}
 		}
 		w.OnResize(rememberSize)

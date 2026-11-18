@@ -22,6 +22,14 @@ public static class SSHubWindowTest {
     [StructLayout(LayoutKind.Sequential)] public struct Rect { public int Left, Top, Right, Bottom; }
     [StructLayout(LayoutKind.Sequential)] public struct Point { public int X, Y; }
     [DllImport("user32.dll")] public static extern IntPtr SetThreadDpiAwarenessContext(IntPtr context);
+    [StructLayout(LayoutKind.Sequential)] public struct MonitorInfo { public int Size; public Rect Monitor, Work; public int Flags; }
+    [DllImport("user32.dll")] public static extern IntPtr MonitorFromWindow(IntPtr w, int flags);
+    [DllImport("user32.dll")] public static extern bool GetMonitorInfoW(IntPtr monitor, ref MonitorInfo info);
+    public static Rect WorkArea(IntPtr w) {
+        MonitorInfo i = new MonitorInfo { Size = Marshal.SizeOf<MonitorInfo>() };
+        if (!GetMonitorInfoW(MonitorFromWindow(w, 2), ref i)) throw new InvalidOperationException("No monitor work area");
+        return i.Work;
+    }
     [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr w, out Rect r);
     [DllImport("user32.dll")] public static extern bool GetClientRect(IntPtr w, out Rect r);
     [DllImport("user32.dll")] public static extern bool ClientToScreen(IntPtr w, ref Point p);
@@ -146,6 +154,16 @@ public static class SSHubWindowTest {
     Start-App
     Invoke-RawUI screenshot (Join-Path $directory 'restored-normal-size.png') | Out-Null
     if ([SSHubWindowTest]::IsZoomed($windowHandle)) { throw 'Restart should restore the normal window' }
+    Close-App
+    $saved.window_width = 8192
+    $saved.window_height = 8192
+    $saved | ConvertTo-Json -Depth 8 | Set-Content -Encoding utf8 (Join-Path $dataDir 'workspace.json')
+    Start-App
+    $work = [SSHubWindowTest]::WorkArea($windowHandle)
+    $bounds = [SSHubWindowTest]::Bounds($windowHandle)
+    if ($bounds.Left -lt $work.Left - 2 -or $bounds.Top -lt $work.Top - 2 -or $bounds.Right -gt $work.Right + 2 -or $bounds.Bottom -gt $work.Bottom + 2) {
+        throw "Oversized saved window did not fit: bounds=$($bounds | ConvertTo-Json -Compress) work=$($work | ConvertTo-Json -Compress)"
+    }
     Close-App
     Write-Host "Custom title bar UI checks passed: $directory"
 } catch {
