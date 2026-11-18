@@ -23,7 +23,7 @@ func (a *app) setDefaultFontSize(id int) {
 
 func (a *app) applyPreferences(p library.Preferences, resetTabs bool) {
 	if err := library.ValidatePreferences(p); err != nil {
-		a.notice = err.Error()
+		a.actionError = err.Error()
 		return
 	}
 	a.preferences = p.Clone()

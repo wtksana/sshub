@@ -51,7 +51,9 @@ try {
     Invoke-RawUI fill key=settings-ui-size '13' | Out-Null
     Invoke-RawUI press key=theme-light | Out-Null
     Invoke-RawUI press key=settings-save --settle | Out-Null
-    Invoke-RawUI press key=dismiss-notice --settle | Out-Null
+    $closeNotice = [regex]::Match((Get-ProductSnapshot), '(?m)^\s*(@e\d+) \[button\] "关闭通知"').Groups[1].Value
+    if (!$closeNotice) { throw 'Saved notification close button missing' }
+    Invoke-RawUI press $closeNotice --settle | Out-Null
     Invoke-RawUI press key=app-menu --settle | Out-Null
     Invoke-RawUI press 'key={settings}' --settle | Out-Null
     Invoke-RawUI screenshot (Join-Path $directory 'settings-900-light-13.png') | Out-Null

@@ -11,6 +11,7 @@
 | `internal/desktop/diagnostics.go` | 默认关闭的正式性能诊断；首帧、接收字节与 Go 运行时计数，不读取终端文本 |
 | `internal/desktop/app.go` | 界面状态及配置、收藏、最近使用等操作 |
 | `internal/desktop/view.go` | 主布局、主题与全局反馈 |
+| `internal/desktop/notifications.go` | 右上角通知；悬停或键盘聚焦时暂停，累计 3 秒后关闭 |
 | `internal/desktop/titlebar.go` | 内置标题栏、拖动区域和窗口按钮 |
 | `internal/desktop/sidebar.go` | 连接库、搜索和筛选 |
 | `internal/desktop/workspace.go` | 窗格树渲染、平面标签组、状态点及按需搜索 |

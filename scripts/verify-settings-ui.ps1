@@ -87,7 +87,15 @@ try {
     Wait-Text '设置已保存'
     if ((Read-Config).preferences.ui_font_size -ne 15 -or (Read-Config).preferences.ui_font_family -ne 'Microsoft YaHei UI') { throw 'UI fonts not persisted separately' }
     if ((Read-Config).preferences.theme -ne 'dark') { throw 'Theme not persisted' }
+    $closeNotice = [regex]::Match((Get-ProductSnapshot), '(?m)^\s*(@e\d+) \[button\] "关闭通知"').Groups[1].Value
+    if (!$closeNotice) { throw 'Saved notification close button missing' }
+    Invoke-RawUI pointer move $closeNotice --settle | Out-Null
+    # Wait beyond expiry to verify that hovering really pauses the notification.
+    Start-Sleep -Milliseconds 3500
+    Assert-Text '设置已保存'
     Invoke-RawUI screenshot (Join-Path $directory 'dark.png') | Out-Null
+    Invoke-RawUI pointer move key=app-menu --settle | Out-Null
+    Invoke-RawUI wait --text '设置已保存' --gone --timeout 4s --settle | Out-Null
     Invoke-RawUI press key=profile-original --settle | Out-Null
     Invoke-ProductUI press key=connect-profile --settle | Out-Null
     Wait-Text '连接失败'
@@ -104,6 +112,7 @@ try {
     Invoke-RawUI fill key=migration-path $export | Out-Null
     Invoke-RawUI press key=export-save --settle | Out-Null
     Wait-Text '配置已导出到'
+    Invoke-RawUI screenshot (Join-Path $directory 'export-notification.png') | Out-Null
     $bundle = Get-Content -Raw $export | ConvertFrom-Json
     if ($bundle.format -ne 'sshub' -or $bundle.profiles.Count -ne 1 -or $bundle.preferences.font_size -ne 16) { throw 'Export data incorrect' }
     $beforeExport = [IO.File]::ReadAllText($export)

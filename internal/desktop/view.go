@@ -34,18 +34,6 @@ func (a *app) view(c *ui.Context) {
 			})
 			return
 		}
-		if a.actionError != "" {
-			ui.Row(c).Padding(8, 14).Gap(10).Children(func() {
-				ui.Text(c, a.actionError).TextColor(t.Danger).Wrap().Grow(1)
-				ui.Button(c.Key("dismiss-error"), "关闭提示").OnClick(func() { a.actionError = "" })
-			})
-		}
-		if a.notice != "" {
-			ui.Row(c).Padding(8, 14).Gap(10).Children(func() {
-				ui.Text(c, a.notice).Wrap().Grow(1)
-				ui.Button(c.Key("dismiss-notice"), "关闭提示").OnClick(func() { a.notice = "" })
-			})
-		}
 		main := func() {
 			if a.hideRight {
 				a.center(c)
@@ -102,4 +90,5 @@ func (a *app) view(c *ui.Context) {
 			}
 		}
 	}
+	a.notifications(c)
 }
