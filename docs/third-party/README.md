@@ -2,7 +2,7 @@
 
 `manifest.json` 列出 Windows 正式 EXE 实际链接的 Go 模块及版本，许可文本直接取自各版本 module cache。Go 运行时使用 `Go-LICENSE.txt`；MyGo 内部 shader 编译器沿用 Ebitengine Apache 2.0 许可，另附 `MyGo-shader-LICENSE.txt`。应用字体通过 Windows 系统字体读取，未将系统字体文件打包。
 
-Ghostty DLL 固定在 MyGo v0.9.1 的 `plugins/terminal/mygo-plugin.json` 指定版本：
+Ghostty DLL 固定在 MyGo v0.10.0 的 `plugins/terminal/mygo-plugin.json` 指定版本：
 
 - 源码：<https://github.com/ghostty-org/ghostty/tree/befcdfd2c3a1cb24d9ec886e93c95b2b5daa7028>
 - DLL SHA-256：`53e8e2dd979702e8f2c48107af19be5a76efc2e88eb7cf1097218e899665da41`

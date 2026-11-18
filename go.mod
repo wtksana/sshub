@@ -4,7 +4,7 @@ go 1.27.4
 
 require (
 	github.com/Microsoft/go-winio v0.6.2
-	github.com/egoist/mygo v0.9.1
+	github.com/egoist/mygo v0.10.0
 	github.com/pkg/sftp v1.13.10
 	golang.org/x/crypto v0.57.0
 	golang.org/x/sys v0.48.0

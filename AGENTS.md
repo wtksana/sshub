@@ -9,7 +9,7 @@
 
 ## 技术与结构
 
-- 使用 Go 1.27.4、MyGo v0.9.1 和官方 Ghostty 终端，保持原生模式及 `mygo_nowebview` 构建标签。固定依赖版本；升级需验证受影响的原生集成与资源表现。
+- 使用 Go 1.27.4、MyGo v0.10.0 和官方 Ghostty 终端，保持原生模式及 `mygo_nowebview` 构建标签。固定依赖版本；升级需验证受影响的原生集成与资源表现。
 - 根目录 `main.go` 只负责启动；界面与应用状态放在 `internal/desktop`，连接配置与偏好放在 `internal/library`，窗格及标签布局放在 `internal/workspace`，SSH / SFTP 协议放在 `internal/connection`，文件树传输放在 `internal/transfer`。UI 不实现 SSH 协议或终端模拟器。
 - 优先在现有包内按职责拆文件，新增包应对应独立职责。界面状态在 UI 线程更新，网络、凭据及耗时操作在后台执行；保留取消、代次校验与共享连接的资源所有权。
 - 配置、布局保持向后兼容，损坏数据或外部修改不能静默覆盖。`workspace.json` 是兼容保留的标签布局文件名，不代表产品存在“工作区”实体。

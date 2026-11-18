@@ -24,13 +24,16 @@ try{
         $license = @($licenses | Where-Object { $_.module -eq $module.Groups[1].Value -and $_.version -eq $module.Groups[2].Value })
         if ($license.Count -ne 1 -or !(Test-Path -LiteralPath (Join-Path 'docs/third-party' $license[0].license_file))) { throw "Missing license for $($module.Groups[1].Value)" }
     }
-    $plugin=Get-Content -Raw ((go env GOMODCACHE)+'/github.com/egoist/mygo@v0.9.1/plugins/terminal/mygo-plugin.json')|ConvertFrom-Json
+    $mygoModule = $modules | Where-Object { $_.Groups[1].Value -eq 'github.com/egoist/mygo' }
+    if (!$mygoModule) { throw 'Release EXE is missing the MyGo module' }
+    $mygoVersion = $mygoModule.Groups[2].Value
+    $plugin=Get-Content -Raw ((go env GOMODCACHE)+"/github.com/egoist/mygo@$mygoVersion/plugins/terminal/mygo-plugin.json")|ConvertFrom-Json
     $expected=$plugin.libraries[0].files.'windows-amd64'.sha256
     if((Get-FileHash (Join-Path $stage 'ghostty-vt.dll')).Hash.ToLowerInvariant() -ne $expected){throw 'Ghostty DLL hash mismatch'}
     Copy-Item -LiteralPath 'docs/portable-readme.md' -Destination (Join-Path $stage '使用说明.md')
     Copy-Item -LiteralPath 'scripts/verify-portable-runtime.ps1' -Destination $stage
     Copy-Item -LiteralPath 'docs/third-party' -Destination (Join-Path $stage 'licenses') -Recurse
-    @{name='SSHub';version=$config.version;packaged_at=(Get-Date).ToString('o');packaging_commit=(git rev-parse HEAD);packaging_tree_dirty=([bool](git status --porcelain));go_build_info=$buildInfo;ghostty_source=$plugin.libraries[0].source;ghostty_dll_sha256=$expected;mygo='v0.9.1';platform='windows-amd64';signed=$false}|ConvertTo-Json -Depth 5|Set-Content -Encoding utf8 (Join-Path $stage 'build-info.json')
+    @{name='SSHub';version=$config.version;packaged_at=(Get-Date).ToString('o');packaging_commit=(git rev-parse HEAD);packaging_tree_dirty=([bool](git status --porcelain));go_build_info=$buildInfo;ghostty_source=$plugin.libraries[0].source;ghostty_dll_sha256=$expected;mygo=$mygoVersion;platform='windows-amd64';signed=$false}|ConvertTo-Json -Depth 5|Set-Content -Encoding utf8 (Join-Path $stage 'build-info.json')
     $checksums=Get-ChildItem -LiteralPath $stage -File -Recurse|ForEach-Object {
         $relative=[IO.Path]::GetRelativePath($stage,$_.FullName).Replace('\','/')
         '{0}  {1}' -f (Get-FileHash -LiteralPath $_.FullName).Hash.ToLowerInvariant(),$relative
